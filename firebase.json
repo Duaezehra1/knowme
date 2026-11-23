@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "knowme-passport",
     "public": "web/dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "headers": [

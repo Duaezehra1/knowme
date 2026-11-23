@@ -6,7 +6,7 @@ import { Icon, IconBadge } from '../components/Icon'
 import { CallButtons, EntryCard, Page, SourceChip } from '../components/ui'
 import type { AppContext } from '../context'
 import { situationEntries } from '../data/glance'
-import { SITUATIONS, type Situation } from '../data/rules'
+import { SITUATIONS, withName, type Situation } from '../data/rules'
 import type { Entry } from '../data/types'
 import { useElapsed } from '../hooks'
 
@@ -36,7 +36,8 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
   const elapsed = useElapsed(thinking)
   const route = chooseRoute(passport, status)
 
-  async function run(text: string, found: Entry[], icon?: string) {
+  /** `text` is what the carer sees; `question` is what the AI is asked (a full sentence for buttons). */
+  async function run(text: string, found: Entry[], icon?: string, question = text) {
     const id = ++runId.current
     setAsked({ text, icon })
     setEntries(found)
@@ -48,7 +49,7 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
     try {
       const result = await answerQuestion(
         passport,
-        text,
+        question,
         found.map((entry) => ({ entry, score: 1 })),
         route,
       )
@@ -81,7 +82,7 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
       return
     }
     setQuestion('')
-    void run(`${name}: ${s.label.toLowerCase()}`, situationEntries(passport, s), s.icon)
+    void run(s.label, situationEntries(passport, s), s.icon, withName(s.question, name))
   }
 
   useEffect(() => {
@@ -176,6 +177,7 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
                   </div>
                 </div>
               )}
+              {aiFailed && <p className="muted small">The AI couldn't answer just now, so here is exactly what {name}'s family wrote.</p>}
               <div className="row">
                 <h2 style={{ fontSize: '1rem' }}>From {name}'s passport</h2>
                 {(!answer || answer.found === 'none' || aiFailed) && !thinking && <SourceChip source="offline_search" />}

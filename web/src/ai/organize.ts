@@ -88,7 +88,13 @@ export async function organizeNotes(
     const prompt = fillPrompt(PROMPTS.organize, { name, notes: text })
     let raw: RawEntry[] = []
     try {
-      const { data } = await generateJson<{ entries?: RawEntry[] }>(route, organizeSchema, 'organize', prompt)
+      const { data } = await generateJson<{ entries?: RawEntry[] }>(
+        route,
+        organizeSchema,
+        'organize',
+        prompt,
+        `{"entries": [{"section": one of ${SECTION_IDS.join(' | ')}, "signal": string, "meaning": string, "whatToDo": string, "quote": string}]}`,
+      )
       raw = data.entries ?? []
     } catch (e) {
       // One bad chunk should not lose the rest; the owner can still add entries by hand.

@@ -2,6 +2,8 @@
 node_modules/
 dist/
 dist-extension/
+web/public/downloads/
+release/
 *.tsbuildinfo
 
 # Local secrets (Firebase keys, App Check debug tokens)

@@ -24,6 +24,8 @@ export interface Situation {
   id: string
   icon: string
   label: string
+  /** The full question sent to the AI, with {name}. */
+  question: string
   query: string
   sections: SectionId[]
   /** Which section colour the tile uses. */

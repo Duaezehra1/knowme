@@ -219,8 +219,13 @@ export function AiStatus({ ctx }: { ctx: AppContext }) {
       <strong>KnowMe works without AI here</strong>
       <span className="muted">
         This device can't run private AI, so KnowMe shows answers straight from the passport.
-        {passport.settings.cloudHelp ? ' Cloud help adds a short summary when online.' : ''}
+        {passport.settings.cloudHelp ? ' Cloud help adds a short AI answer when online.' : ''}
       </span>
+      {!passport.settings.cloudHelp && !ctx.carerMode && ctx.route !== '/settings' && (
+        <a className="link" href="#/settings">
+          Want short AI answers? Turn on Cloud help in Settings
+        </a>
+      )}
     </div>
   )
 }

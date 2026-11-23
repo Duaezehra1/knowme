@@ -6,6 +6,10 @@ import com.google.firebase.ai.OnDeviceConfig
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.PublicPreviewAPI
+import com.google.firebase.ai.type.ThinkingLevel
+import com.google.firebase.ai.type.generationConfig
+import com.google.firebase.ai.type.thinkingConfig
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -20,9 +24,22 @@ import kotlinx.serialization.json.Json
 object KnowMeAi {
     private const val CLOUD_MODEL = "gemini-3.5-flash-lite"
 
+    // Short, fact-bound jobs: minimal thinking keeps cloud answers to a couple of seconds.
+    private val cloudConfig = generationConfig {
+        temperature = 0.2f
+        responseMimeType = "application/json"
+        thinkingConfig = thinkingConfig { thinkingLevel = ThinkingLevel.MINIMAL }
+    }
+
     private fun model(mode: InferenceMode) =
-        Firebase.ai(backend = GenerativeBackend.googleAI())
-            .generativeModel(modelName = CLOUD_MODEL, onDeviceConfig = OnDeviceConfig(mode = mode))
+        Firebase.ai(backend = GenerativeBackend.googleAI()).generativeModel(
+            modelName = CLOUD_MODEL,
+            generationConfig = if (mode == InferenceMode.ONLY_IN_CLOUD) cloudConfig else null,
+            onDeviceConfig = OnDeviceConfig(mode = mode),
+        )
+
+    /** Null until tried. After one failure, this session goes straight to the cloud (or to the passport). */
+    @Volatile private var deviceWorks: Boolean? = null
 
     private val lenient = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -37,6 +54,17 @@ object KnowMeAi {
 
     data class Answer(val text: String, val used: List<Entry>, val source: String)
 
+    /** What happened when a carer asked, so the screen can say it plainly. */
+    sealed interface Outcome {
+        data class Answered(val answer: Answer) : Outcome
+        /** The AI ran but none of the entries fit. */
+        data object NothingFound : Outcome
+        /** No on-device AI and cloud help is off or offline: passport entries only. */
+        data object NoAi : Outcome
+        /** The AI was tried and failed (timeout, no connection, or this copy isn't allowed to use the cloud). */
+        data object Failed : Outcome
+    }
+
     /** "on_device" or "in_cloud", from the SDK's inferenceSource. */
     private fun sourceOf(value: Any?, fallback: String): String {
         val s = value?.toString()?.lowercase() ?: return fallback
@@ -50,20 +78,30 @@ object KnowMeAi {
     }
 
     private suspend fun run(prompt: String, cloud: Boolean): Pair<String, String> {
-        val response = model(if (cloud) InferenceMode.ONLY_IN_CLOUD else InferenceMode.ONLY_ON_DEVICE).generateContent(prompt)
+        // Never leave a carer waiting: past the limit the screen keeps the passport entries (NF-13).
+        val response = withTimeout(if (cloud) 30_000L else 120_000L) {
+            model(if (cloud) InferenceMode.ONLY_IN_CLOUD else InferenceMode.ONLY_ON_DEVICE).generateContent(prompt)
+        }
         return (response.text ?: "") to sourceOf(response.inferenceSource, if (cloud) "in_cloud" else "on_device")
     }
 
-    /**
-     * Answers using ONLY the matched entries. Returns null when no AI route is available
-     * or the AI found nothing; the caller then shows the entries on their own.
-     */
-    suspend fun answer(rules: Rules, passport: Passport, question: String, matches: List<Entry>, cloudAllowed: Boolean): Answer? {
-        if (matches.isEmpty()) return null
-        val onDevice = runCatching { ask(rules, passport, question, matches, cloud = false) }
-        onDevice.getOrNull()?.let { return it }
-        if (!cloudAllowed) return null
-        return runCatching { ask(rules, passport, question, matches, cloud = true) }.getOrNull()
+    /** Tries Gemini Nano on this phone, remembering a failure for the rest of the session. */
+    private suspend fun <T> onDevice(block: suspend () -> T): Result<T> {
+        if (deviceWorks == false) return Result.failure(IllegalStateException("No on-device AI"))
+        val result = runCatching { block() }
+        deviceWorks = result.isSuccess
+        return result
+    }
+
+    /** Answers using ONLY the matched entries. The caller always shows the entries too. */
+    suspend fun answer(rules: Rules, passport: Passport, question: String, matches: List<Entry>, cloudAllowed: Boolean): Outcome {
+        if (matches.isEmpty()) return Outcome.NothingFound
+        val device = onDevice { ask(rules, passport, question, matches, cloud = false) }
+        if (device.isSuccess) return device.getOrNull()?.let { Outcome.Answered(it) } ?: Outcome.NothingFound
+        if (!cloudAllowed) return Outcome.NoAi
+        val cloud = runCatching { ask(rules, passport, question, matches, cloud = true) }
+        if (cloud.isFailure) return Outcome.Failed
+        return cloud.getOrNull()?.let { Outcome.Answered(it) } ?: Outcome.NothingFound
     }
 
     private suspend fun ask(rules: Rules, passport: Passport, question: String, matches: List<Entry>, cloud: Boolean): Answer? {
@@ -109,7 +147,7 @@ object KnowMeAi {
         val out = mutableListOf<Entry>()
         var source: String? = null
         for (chunk in chunks) {
-            val attempt = runCatching { organizeChunk(rules, passport, chunk, cloud = false) }.getOrNull()
+            val attempt = onDevice { organizeChunk(rules, passport, chunk, cloud = false) }.getOrNull()
                 ?: if (cloudAllowed) runCatching { organizeChunk(rules, passport, chunk, cloud = true) }.getOrNull() else null
             if (attempt == null) {
                 if (source == null) return null

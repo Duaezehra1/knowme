@@ -45,6 +45,7 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.QrCode2
 import androidx.compose.material.icons.outlined.ReportProblem
 import androidx.compose.material.icons.outlined.Share
@@ -234,6 +235,21 @@ fun WelcomeScreen(state: AppState) {
         Image(painterResource(R.mipmap.ic_launcher), null, Modifier.size(88.dp).clip(RoundedCornerShape(22.dp)))
         Text("KnowMe", fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, color = KColors.text)
         Text("Help everyone understand your child, even when they can't explain themselves.", fontSize = 17.sp, color = KColors.text, lineHeight = 24.sp)
+        state.rules.demo?.let { demo ->
+            OutlinedButton(
+                onClick = {
+                    state.passport = state.store.save(demoPassport(demo))
+                    state.tab(Screen.Home)
+                },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp),
+                shape = RoundedCornerShape(18.dp),
+            ) {
+                Icon(Icons.Outlined.PlayArrow, null)
+                Spacer(Modifier.width(8.dp))
+                Text("Just looking? Try a demo child", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            Text("Or make a passport for your own child below.", color = KColors.muted, fontSize = 14.sp)
+        }
         val promises = listOf(
             Triple("clock", "routine", "Build a passport in minutes, one simple question at a time."),
             Triple("message-circle", "communication", "Any carer can tap \"Crying\" or type what they see, and get your advice."),
@@ -303,8 +319,21 @@ fun HomeScreen(state: AppState, passport: Passport) {
     val glance = atAGlance(passport)
     val empty = passport.entries.isEmpty()
     Page(title = null, onBack = null) {
+        if (passport.demo) {
+            item {
+                Surface(shape = RoundedCornerShape(20.dp), color = KColors.accentSoft, modifier = Modifier.fillMaxWidth().statusBarsPadding()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("You're trying KnowMe with $name, a made-up child", fontWeight = FontWeight.ExtraBold, color = KColors.text)
+                        Text("Tap \"Ask about $name\" or \"Hand to a carer\" to see what a babysitter sees.", color = KColors.muted, fontSize = 14.sp)
+                        TextButton(onClick = { state.store.delete(); state.passport = null; state.tab(Screen.Home) }, contentPadding = PaddingValues(0.dp)) {
+                            Text("Make a passport for my own child instead", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
         item {
-            Box(Modifier.fillMaxWidth().statusBarsPadding().clip(RoundedCornerShape(30.dp)).background(KColors.heroGradient).padding(22.dp)) {
+            Box(Modifier.fillMaxWidth().then(if (passport.demo) Modifier else Modifier.statusBarsPadding()).clip(RoundedCornerShape(30.dp)).background(KColors.heroGradient).padding(22.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Avatar(passport, 80)
@@ -313,12 +342,22 @@ fun HomeScreen(state: AppState, passport: Passport) {
                             Text("KNOWME PASSPORT", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
                             Text(name, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
                             val sub = listOfNotNull(passport.child.age?.let { "$it years old" }, passport.child.aboutMe).joinToString(" · ")
-                            if (sub.isNotBlank()) Text(sub, color = Color.White.copy(alpha = 0.92f))
+                            if (sub.isNotBlank()) {
+                                Text(sub, color = Color.White.copy(alpha = 0.92f))
+                            } else {
+                                Text(
+                                    "+ Add a line about $name",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                                    modifier = Modifier.clickable { state.tab(Screen.Settings) },
+                                )
+                            }
                         }
                     }
                     Row(Modifier.fillMaxWidth()) {
                         Text(if (c.filled == c.total) "Passport complete" else "${c.filled} of ${c.total} sections done", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                        Text("${passport.entries.size} things to know", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("${passport.entries.size} ${if (passport.entries.size == 1) "note" else "notes"}", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                     LinearProgressIndicator(
                         progress = { (c.filled.toFloat() / c.total).coerceAtLeast(0.04f) },
@@ -610,6 +649,7 @@ fun AskScreen(state: AppState, passport: Passport, situationId: String?, initial
     var askedIcon by remember { mutableStateOf<String?>(null) }
     val entries = remember { mutableStateListOf<Entry>() }
     var answer by remember { mutableStateOf<KnowMeAi.Answer?>(null) }
+    var aiFailed by remember { mutableStateOf(false) }
     var thinking by remember { mutableStateOf(false) }
     var elapsed by remember { mutableIntStateOf(0) }
     var runId by remember { mutableIntStateOf(0) }
@@ -620,18 +660,22 @@ fun AskScreen(state: AppState, passport: Passport, situationId: String?, initial
         onDispose { tts[0]?.shutdown() }
     }
 
-    fun run(text: String, found: List<Entry>, icon: String?) {
+    /** `text` is what the carer sees; `aiQuestion` is what the AI is asked (a full sentence for buttons). */
+    fun run(text: String, found: List<Entry>, icon: String?, aiQuestion: String = text) {
         val id = ++runId
         asked = text; askedIcon = icon
         entries.clear(); entries.addAll(found)
         answer = null
+        aiFailed = false
         if (found.isEmpty()) return
         thinking = true
         elapsed = 0
         scope.launch {
-            val result = runCatching { KnowMeAi.answer(state.rules, passport, text, found, state.cloudAllowed()) }.getOrNull()
+            val outcome = runCatching { KnowMeAi.answer(state.rules, passport, aiQuestion, found, state.cloudAllowed()) }
+                .getOrDefault(KnowMeAi.Outcome.Failed)
             if (id == runId) {
-                answer = result
+                answer = (outcome as? KnowMeAi.Outcome.Answered)?.answer
+                aiFailed = outcome == KnowMeAi.Outcome.Failed
                 thinking = false
             }
         }
@@ -659,7 +703,7 @@ fun AskScreen(state: AppState, passport: Passport, situationId: String?, initial
             state.go(Screen.Emergency())
             return
         }
-        run("$name: ${s.label.lowercase()}", state.matcher.situationEntries(passport, s), s.icon)
+        run(s.label, state.matcher.situationEntries(passport, s), s.icon, s.question.withName(name).ifBlank { "$name: ${s.label}" })
     }
 
     LaunchedEffect(Unit) {
@@ -730,6 +774,9 @@ fun AskScreen(state: AppState, passport: Passport, situationId: String?, initial
                         }
                     }
                 }
+                if (aiFailed) {
+                    item { Text("The AI couldn't answer just now, so here is exactly what $name's family wrote.", color = KColors.muted, fontSize = 14.sp) }
+                }
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("From $name's passport", fontWeight = FontWeight.ExtraBold)
@@ -751,8 +798,10 @@ fun AskScreen(state: AppState, passport: Passport, situationId: String?, initial
 @Composable
 fun EmergencyScreen(state: AppState, passport: Passport, said: String) {
     val name = passport.child.firstName
-    val order = listOf("safety", "medical", "calming", "communication")
-    val entries = order.flatMap { s -> passport.entries.filter { it.section == s } }
+    // Kept short on purpose: safety, medical, calming, then only the first two ways of communicating.
+    val order = listOf("safety", "medical", "calming")
+    val entries = order.flatMap { s -> passport.entries.filter { it.section == s } } +
+        passport.entries.filter { it.section == "communication" }.take(2)
     Page("Emergency", onBack = { state.back() }) {
         item {
             Surface(shape = RoundedCornerShape(26.dp), color = KColors.danger, modifier = Modifier.fillMaxWidth()) {

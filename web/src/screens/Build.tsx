@@ -154,7 +154,7 @@ export function Build({ ctx, initialNotes, source }: { ctx: AppContext; initialN
                 <select value={p.section} onChange={(e) => edit(p.key, { section: e.target.value as SectionId })}>
                   {SECTIONS.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.icon} {s.title}
+                      {s.title}
                     </option>
                   ))}
                 </select>

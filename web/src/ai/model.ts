@@ -1,4 +1,4 @@
-import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, type GenerativeModel, type ObjectSchema } from 'firebase/ai'
+import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, ThinkingLevel, type GenerativeModel, type ObjectSchema } from 'firebase/ai'
 import { firebaseApp } from '../firebase'
 import type { AnswerSource, Passport } from '../data/types'
 
@@ -50,7 +50,14 @@ function getModel(route: Route, schema: ObjectSchema, key: string): GenerativeMo
       mode: route === 'device' ? InferenceMode.ONLY_ON_DEVICE : InferenceMode.ONLY_IN_CLOUD,
       inCloudParams: {
         model: CLOUD_MODEL,
-        generationConfig: { responseMimeType: 'application/json', responseSchema: schema, temperature: 0.2 },
+        // No responseSchema in the cloud: constrained decoding took 10 to 26 s per answer on
+        // gemini-3.5-flash-lite versus about 1.5 s without it. The prompt states the JSON shape
+        // instead, and the reply is parsed leniently and checked by the same guardrails.
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.2,
+          thinkingConfig: { thinkingLevel: ThinkingLevel.MINIMAL },
+        },
       },
       onDeviceParams: { promptOptions: { responseConstraint: schema } },
     })
@@ -67,16 +74,37 @@ export function downloadDeviceModel(schema: ObjectSchema, onProgress?: (fraction
   return getModel('device', schema, 'warmup').initializeDeviceModel(onProgress)
 }
 
+/** The JSON object inside a reply, even if the model wrapped it in a code fence or a sentence. */
+function jsonPart(text: string): string {
+  const start = text.indexOf('{')
+  const end = text.lastIndexOf('}')
+  return start >= 0 && end > start ? text.slice(start, end + 1) : text
+}
+
+/**
+ * Runs one AI job. `shape` describes the JSON reply for the cloud model; Gemini Nano gets
+ * the full schema as a response constraint instead.
+ */
 export async function generateJson<T>(
   route: Route,
   schema: ObjectSchema,
   key: string,
   prompt: string,
+  shape: string,
 ): Promise<{ data: T; source: AnswerSource }> {
-  const result = await getModel(route, schema, key).generateContent(prompt)
+  // Never leave a carer waiting: past the limit the screen keeps the passport entries (NF-13).
+  const limitMs = route === 'cloud' ? 30_000 : 120_000
+  const fullPrompt = route === 'cloud' ? `${prompt}\n\nReply with JSON only, in this shape: ${shape}` : prompt
+  let timer: number | undefined
+  const result = await Promise.race([
+    getModel(route, schema, key).generateContent(fullPrompt),
+    new Promise<never>((_, reject) => {
+      timer = window.setTimeout(() => reject(new Error('The AI took too long to answer.')), limitMs)
+    }),
+  ]).finally(() => window.clearTimeout(timer))
   const text = result.response.text()
   return {
-    data: JSON.parse(text) as T,
+    data: JSON.parse(jsonPart(text)) as T,
     source: result.response.inferenceSource ?? (route === 'device' ? 'on_device' : 'in_cloud'),
   }
 }

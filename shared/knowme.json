@@ -223,6 +223,7 @@
       "id": "crying",
       "icon": "cloud-rain",
       "label": "Crying or upset",
+      "question": "{name} is crying or upset. What should I do?",
       "query": "crying upset distressed screaming",
       "sections": [
         "calming",
@@ -235,6 +236,7 @@
       "id": "hurt",
       "icon": "thermometer",
       "label": "Hurt or unwell",
+      "question": "{name} seems hurt or unwell. What should I do?",
       "query": "pain hurt sick ill ear",
       "sections": [
         "pain",
@@ -246,6 +248,7 @@
       "id": "saying",
       "icon": "message-circle-question",
       "label": "What do they mean?",
+      "question": "{name} is trying to tell me something. What might it mean?",
       "query": "says means wants",
       "sections": [
         "communication"
@@ -256,6 +259,7 @@
       "id": "overwhelmed",
       "icon": "ear",
       "label": "Overwhelmed or scared",
+      "question": "{name} seems overwhelmed or scared. What should I do?",
       "query": "loud noise scared overwhelmed",
       "sections": [
         "upsets",
@@ -267,6 +271,7 @@
       "id": "food",
       "icon": "utensils",
       "label": "Food and drink",
+      "question": "What should I know about {name} and food or drink?",
       "query": "eat food hungry drink water snack",
       "sections": [
         "routine",
@@ -279,6 +284,7 @@
       "id": "toilet",
       "icon": "toilet",
       "label": "Toilet",
+      "question": "What should I know about {name} and the toilet?",
       "query": "toilet",
       "sections": [
         "routine",
@@ -290,6 +296,7 @@
       "id": "happy",
       "icon": "smile",
       "label": "Keep them happy",
+      "question": "How can I keep {name} happy?",
       "query": "loves likes happy",
       "sections": [
         "likes",
@@ -301,6 +308,7 @@
       "id": "lost",
       "icon": "siren",
       "label": "Ran off or lost",
+      "question": "{name} ran off or is lost.",
       "query": "",
       "sections": [
         "safety"
@@ -503,7 +511,138 @@
   ],
   "prompts": {
     "organize": "You organise a parent's notes about their child, {name}, into passport entries that help other carers understand {name}.\nRules:\n- Use ONLY facts stated in the NOTES. Never add advice, guesses or facts of your own.\n- Make one entry per distinct fact.\n- section is one of: communication, calming, upsets, likes, pain, medical, routine, safety.\n- signal: what a carer sees or hears, or the fact itself. At most 15 words.\n- meaning: what it means. Fill it for communication and pain entries; otherwise use an empty string.\n- whatToDo: what helps, only if the NOTES say so; otherwise an empty string.\n- quote: copy 3 to 12 words EXACTLY, word for word, from the NOTES that support the entry.\n\nNOTES:\n\"\"\"\n{notes}\n\"\"\"",
-    "answer": "You help a carer look after {name}, a child who cannot easily explain themselves.\nThe carer says: \"{question}\"\n\nThese are the ONLY facts you may use, from {name}'s passport, written by the parent:\n{facts}\n\nRules:\n- Use only these facts. Never add medical advice or anything not in them.\n- answer: at most 3 short, calm sentences (under 60 words) saying what it probably means and what the carer should do. Talk to the carer directly as \"you\". The parent is {parent}: if the carer should contact the parent, say \"call {parent}\", never \"call me\". Do not write ids in the answer.\n- usedIds: the ids of the facts you used, for example [\"e2\"].\n- found: \"found\" if the facts clearly answer it, \"partial\" if they only help a little, \"none\" if none of them fit (then answer is an empty string).",
+    "answer": "You help a carer look after {name}, a child who cannot easily explain themselves.\nThe carer says: \"{question}\"\n\nThese are the ONLY facts you may use, from {name}'s passport, written by the parent:\n{facts}\n\nRules:\n- Use only these facts. Never add medical advice or anything not in them.\n- answer: at most 3 short, calm sentences (under 60 words) saying what it probably means and what the carer should do. Talk to the carer directly as \"you\". The parent is {parent}: if the carer should contact the parent, say \"call {parent}\", never \"call me\". Do not write ids in the answer.\n- usedIds: the ids of the facts you used, for example [\"e2\"].\n- found: \"found\" if the facts clearly answer it, \"partial\" if they help at all, \"none\" only if not one fact is related (then answer is an empty string). If any fact could help the carer right now, use it.",
     "observation": "A carer noticed something new about {name}: \"{observation}\"\n\nCurrent passport entries that may be related:\n{facts}\n\nPropose ONE passport change using only what the carer said.\n- action: \"add\" for a new fact, or \"edit\" to improve an existing entry (then set editId to its id).\n- section is one of: communication, calming, upsets, likes, pain, medical, routine, safety.\n- signal, meaning and whatToDo follow the same meaning as the existing entries. Use empty strings for parts the carer did not say."
+  },
+  "demo": {
+    "note": "A fictional child for demos and judges. No real child data.",
+    "child": {
+      "firstName": "Sam",
+      "age": 7,
+      "aboutMe": "Loves buses, trains and the colour yellow",
+      "avatar": "bus:gold"
+    },
+    "contact": {
+      "name": "Mum",
+      "relation": "mother",
+      "phone": "+92 000 0000000"
+    },
+    "emergencyNumber": "112",
+    "entries": [
+      {
+        "section": "communication",
+        "signal": "Says \"ba-ba\" and points at the window",
+        "meaning": "He wants to watch the buses",
+        "whatToDo": "Let him watch for two minutes, then say \"bus finished\""
+      },
+      {
+        "section": "communication",
+        "signal": "Says \"wa\"",
+        "meaning": "He wants water",
+        "whatToDo": "Give him a drink of water"
+      },
+      {
+        "section": "communication",
+        "signal": "Says \"mama-dee\"",
+        "meaning": "He wants his mum",
+        "whatToDo": "Tell him Mum is coming. Call her if he keeps asking"
+      },
+      {
+        "section": "communication",
+        "signal": "Pulls your hand to the fridge",
+        "meaning": "He is hungry",
+        "whatToDo": "Offer a snack. Banana slices are his favourite"
+      },
+      {
+        "section": "communication",
+        "signal": "Flaps his hands",
+        "meaning": "He is happy or excited",
+        "whatToDo": "This is fine, please do not stop him"
+      },
+      {
+        "section": "pain",
+        "signal": "Hits his ear and says \"ow-ee\"",
+        "meaning": "He is in pain, or it is too loud for him",
+        "whatToDo": "Take him somewhere quiet first. If he keeps doing it, call Mum: it may be an ear infection"
+      },
+      {
+        "section": "pain",
+        "signal": "Goes very quiet and lies on the floor",
+        "meaning": "He may be ill",
+        "whatToDo": "Check if he feels hot and call Mum"
+      },
+      {
+        "section": "upsets",
+        "signal": "Loud noises like hand dryers, blenders and fire alarms",
+        "meaning": "",
+        "whatToDo": "Move him away from the noise and speak softly"
+      },
+      {
+        "section": "upsets",
+        "signal": "Sudden changes to his routine",
+        "meaning": "",
+        "whatToDo": "Tell him what is happening next before it happens"
+      },
+      {
+        "section": "upsets",
+        "signal": "Someone touching his head or grabbing his arm",
+        "meaning": "",
+        "whatToDo": "Do not do this, he panics. Hold his hand gently instead"
+      },
+      {
+        "section": "calming",
+        "signal": "Humming \"Twinkle Twinkle Little Star\"",
+        "meaning": "",
+        "whatToDo": "Hum it softly, close to him"
+      },
+      {
+        "section": "calming",
+        "signal": "A tight hug or a heavy blanket",
+        "meaning": "",
+        "whatToDo": "Use it when he is overwhelmed"
+      },
+      {
+        "section": "likes",
+        "signal": "Buses and trains",
+        "meaning": "",
+        "whatToDo": "Talk about buses to connect with him"
+      },
+      {
+        "section": "likes",
+        "signal": "The colour yellow and banana slices",
+        "meaning": "",
+        "whatToDo": "A yellow toy or banana slices cheer him up"
+      },
+      {
+        "section": "medical",
+        "signal": "Allergic to peanuts",
+        "meaning": "",
+        "whatToDo": "His EpiPen is in the front pocket of his bag. If he reacts, use it and call the emergency number"
+      },
+      {
+        "section": "routine",
+        "signal": "Needs the toilet every 2 hours",
+        "meaning": "",
+        "whatToDo": "If he stands by the door and rocks, he needs to go"
+      },
+      {
+        "section": "routine",
+        "signal": "Gets tired after lunch",
+        "meaning": "",
+        "whatToDo": "Give him 20 minutes of quiet time"
+      },
+      {
+        "section": "safety",
+        "signal": "Runs off when he sees a bus or water",
+        "meaning": "",
+        "whatToDo": "Always hold his hand near roads. He does not understand traffic"
+      },
+      {
+        "section": "safety",
+        "signal": "Will not answer to his name if lost",
+        "meaning": "",
+        "whatToDo": "Speak softly, say \"Sam, bus finished\", and stay with him"
+      }
+    ]
   }
 }

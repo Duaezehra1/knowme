@@ -15,10 +15,12 @@ function offlineServiceWorker(): Plugin {
     generateBundle(_options, bundle) {
       const files = Object.keys(bundle).filter((f) => !f.endsWith('.map'))
       // Files copied from public/ (manifest, icons) are not in the bundle, so list them too.
+      // public/downloads (the Android APK and extension zip for judges) is never precached.
       const publicDir = fileURLToPath(new URL('./public', import.meta.url))
       const publicFiles = readdirSync(publicDir, { recursive: true, withFileTypes: true })
         .filter((d) => d.isFile())
         .map((d) => relative(publicDir, join(d.parentPath, d.name)).replace(/\\/g, '/'))
+        .filter((f) => !f.startsWith('downloads/'))
       const precache = ['/', ...[...files, ...publicFiles].map((f) => `/${f}`)]
       const version = Date.now().toString(36)
       const source = `// Generated at build time. Precaches the whole app so it works offline.

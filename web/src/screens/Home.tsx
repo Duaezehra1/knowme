@@ -4,6 +4,7 @@ import { AiStatus, Avatar, Page } from '../components/ui'
 import type { AppContext } from '../context'
 import { atAGlance, completeness } from '../data/glance'
 import { SECTIONS, sectionInfo, withName } from '../data/rules'
+import { deleteEverything } from '../data/store'
 
 /** The parent's passport: who the child is, what carers will see, and what's left to add. */
 export function Home({ ctx }: { ctx: AppContext }) {
@@ -15,22 +16,46 @@ export function Home({ ctx }: { ctx: AppContext }) {
   const empty = passport.entries.length === 0
   const count = passport.entries.length
 
+  async function startOwn() {
+    await deleteEverything()
+    ctx.replacePassport(null)
+    navigate('/')
+  }
+
   return (
     <Page ctx={ctx}>
+      {passport.demo && (
+        <section className="notice warm demo-banner" aria-label="Demo">
+          <strong className="inline-icon">
+            <Icon name="play" size={18} /> You're trying KnowMe with {name}, a made-up child
+          </strong>
+          <span className="muted">Tap "Ask about {name}" or "Hand to a carer" to see what a babysitter sees.</span>
+          <button type="button" className="link" onClick={startOwn}>
+            Make a passport for my own child instead
+          </button>
+        </section>
+      )}
+
       <section className="hero-card rise" aria-label={`${name}'s passport`}>
         <div className="hero-top">
           <Avatar passport={passport} size={84} />
           <div>
             <p className="hero-label">KnowMe passport</p>
             <h1>{name}</h1>
-            <p>{[child.age ? `${child.age} years old` : '', child.aboutMe].filter(Boolean).join(' · ') || 'Add a line about them in Settings'}</p>
+            {child.age || child.aboutMe ? (
+              <p>{[child.age ? `${child.age} years old` : '', child.aboutMe].filter(Boolean).join(' · ')}</p>
+            ) : (
+              <a className="hero-add" href="#/settings">
+                + Add a line about {name}
+              </a>
+            )}
           </div>
         </div>
         <div className="progress">
           <div className="progress-text">
             <span>{filled === total ? 'Passport complete' : `${filled} of ${total} sections done`}</span>
             <span>
-              {count} {count === 1 ? 'thing' : 'things'} to know
+              {count} {count === 1 ? 'note' : 'notes'}
             </span>
           </div>
           <div className="progress-bar" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={filled}>

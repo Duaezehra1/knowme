@@ -62,6 +62,8 @@ data class Passport(
     val contacts: List<Contact> = emptyList(),
     val emergencyCard: EmergencyCard = EmergencyCard(),
     val settings: Settings = Settings(),
+    /** The ready-made fictional child from "Try a demo child". */
+    val demo: Boolean = false,
 ) {
     val primaryContact: Contact? get() = contacts.firstOrNull { it.primary } ?: contacts.firstOrNull()
 }
@@ -129,6 +131,8 @@ data class Situation(
     val id: String,
     val icon: String,
     val label: String,
+    /** The full question sent to the AI, with {name}. */
+    val question: String = "",
     val query: String = "",
     val sections: List<String>,
     val tone: String,
@@ -142,6 +146,7 @@ data class Rules(
     val emergencyPhrases: List<String>,
     val synonyms: List<List<String>>,
     val prompts: Map<String, String>,
+    val demo: Demo? = null,
 ) {
     fun section(id: String): SectionInfo = sections.firstOrNull { it.id == id } ?: sections.first()
 
@@ -150,6 +155,29 @@ data class Rules(
             appJson.decodeFromString(context.assets.open("knowme.json").bufferedReader().use { it.readText() })
     }
 }
+
+@Serializable
+data class DemoChild(val firstName: String, val age: Int? = null, val aboutMe: String? = null, val avatar: String? = null)
+
+@Serializable
+data class DemoContact(val name: String, val relation: String = "parent", val phone: String = "")
+
+@Serializable
+data class DemoEntry(val section: String, val signal: String, val meaning: String = "", val whatToDo: String = "")
+
+/** A fictional child (shared/knowme.json), so anyone can try KnowMe in one tap. */
+@Serializable
+data class Demo(val child: DemoChild, val contact: DemoContact, val emergencyNumber: String = "112", val entries: List<DemoEntry> = emptyList())
+
+/** Sam is made up, so cloud help is on: judges without on-device AI still see AI answers. */
+fun demoPassport(demo: Demo) = Passport(
+    id = newId("p"),
+    demo = true,
+    child = Child(firstName = demo.child.firstName, age = demo.child.age, aboutMe = demo.child.aboutMe, avatar = demo.child.avatar),
+    entries = demo.entries.map { Entry(id = newId("e"), section = it.section, signal = it.signal, meaning = it.meaning, whatToDo = it.whatToDo) },
+    contacts = listOf(Contact(id = newId("c"), name = demo.contact.name, relation = demo.contact.relation, phone = demo.contact.phone, primary = true)),
+    settings = Settings(cloudHelp = true, emergencyNumber = demo.emergencyNumber, country = "OTHER"),
+)
 
 fun String.withName(name: String): String = replace("{name}", name)
 

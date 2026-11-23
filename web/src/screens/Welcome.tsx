@@ -4,12 +4,13 @@ import { WelcomeScene } from '../components/Illustrations'
 import { EMERGENCY_NUMBERS } from '../data/rules'
 import { createPassport, importPassport } from '../data/store'
 import { photoToDataUrl } from '../data/photo'
+import { demoPassport } from '../data/sample'
 import type { Passport } from '../data/types'
 
 const PROMISES = [
   { icon: 'book-open', tone: 'routine', title: 'Build a passport in minutes.', text: 'Answer simple questions about how your child communicates, what calms them and what to watch for.' },
   { icon: 'message-circle', tone: 'communication', title: 'Anyone can ask it.', text: 'A babysitter, teacher or nurse taps "Crying" or types what they see, and gets your advice in seconds.' },
-  { icon: 'lock', tone: 'safety', title: 'Private and offline.', text: 'Everything stays on this device. The AI runs inside Chrome, so it works with no internet.' },
+  { icon: 'lock', tone: 'safety', title: 'Private and offline.', text: 'Everything stays on this device. Where the device can, the AI runs on it too, so it works with no internet.' },
   { icon: 'qr-code', tone: 'upsets', title: 'A QR card for their bag.', text: 'If your child is ever lost, any phone camera can read it, with no app needed.' },
 ]
 
@@ -46,6 +47,11 @@ export function Welcome({ onCreate }: { onCreate: (p: Passport, startInterview: 
       }),
       startInterview,
     )
+  }
+
+  async function tryDemo() {
+    setBusy(true)
+    await onCreate(demoPassport(), false)
   }
 
   async function importFile(file: File) {
@@ -88,6 +94,12 @@ export function Welcome({ onCreate }: { onCreate: (p: Passport, startInterview: 
             <h1>KnowMe</h1>
             <p className="tagline">Help everyone understand your child, even when they can't explain themselves.</p>
           </header>
+          <button type="button" className="primary big" onClick={() => setStep(1)}>
+            Make a passport for my child <Icon name="arrow-right" size={20} />
+          </button>
+          <button type="button" className="secondary big" disabled={busy} onClick={tryDemo}>
+            <Icon name="play" size={20} /> Just looking? Try a demo child
+          </button>
           <ul className="promise">
             {PROMISES.map((p) => (
               <li key={p.title}>
@@ -98,9 +110,6 @@ export function Welcome({ onCreate }: { onCreate: (p: Passport, startInterview: 
               </li>
             ))}
           </ul>
-          <button type="button" className="primary big" onClick={() => setStep(1)}>
-            Get started <Icon name="arrow-right" size={20} />
-          </button>
           <label className="link center" style={{ cursor: 'pointer' }}>
             I have a backup file
             <input type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && importFile(e.target.files[0])} />

@@ -47,7 +47,7 @@ export interface Passport {
     firstName: string
     age?: number
     aboutMe?: string
-    /** Emoji avatar, used when there is no photo. */
+    /** Picture and colour ("bus:gold"), used when there is no photo. */
     avatar?: string
     /** Small JPEG data URL, stored on this device only. Helps a carer recognise the child. */
     photo?: string
@@ -56,6 +56,8 @@ export interface Passport {
   contacts: Contact[]
   emergencyCard: EmergencyCard
   settings: Settings
+  /** The ready-made fictional child from "Try a demo child". */
+  demo?: boolean
 }
 
 /** An AI suggestion waiting for the owner's approval (FR-06). */

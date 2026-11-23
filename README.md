@@ -45,19 +45,40 @@ About 1 in 127 people are autistic ([WHO, 2025](https://www.who.int/news-room/fa
 ## Firebase
 
 - **Firebase AI Logic** with hybrid inference: web SDK (`getGenerativeModel` with `InferenceMode`) and Android SDK (`firebase-ai` + `firebase-ai-ondevice`, `OnDeviceConfig`)
-- **App Check**: debug providers in development (web debug token, Android `DebugAppCheckProviderFactory`)
+- **App Check** enforced on AI Logic: reCAPTCHA Enterprise on the website, Play Integrity registered for Android, and debug providers for development builds (web debug token, Android `DebugAppCheckProviderFactory`)
+- **Fast cloud answers**: `gemini-3.5-flash-lite` with minimal thinking. The JSON shape is given in the prompt rather than as a response schema, which cut cloud answers from 10 to 26 seconds down to about 2. A 30-second limit means a carer is never left waiting: the parent's notes are always on screen first.
 - **Hosting** for the web app, with a service worker so it works offline
 - Shared rules file `shared/knowme.json` (sections, situations, emergency phrases, synonyms, AI prompts) used by every platform
 
-## Try it
+## Try it in one minute (for judges)
 
-1. Open https://knowme-passport.web.app in **desktop Chrome**.
-2. Create a passport (use the fictional child "Sam"), or go to **Paste a description → Try sample notes**.
-3. Tap **Ask** and a situation such as **Hurt or unwell**.
-4. Tap **Hand to a carer** to see the carer view and flashcards.
-5. Open **QR card** and scan it with another phone's camera.
+Every platform has a **"Just looking? Try a demo child"** button on its first screen. It opens a full passport for Sam, a made-up 7-year-old, with Cloud help already on (no real child's data is ever involved).
 
-**On-device AI in Chrome** needs desktop Chrome 139+, 22 GB free disk space, and a GPU with more than 4 GB VRAM or 16 GB RAM with 4+ CPU cores. Check `chrome://on-device-internals`. Without it, KnowMe still works with offline search.
+### Web app (any browser)
+
+1. Open **https://knowme-passport.web.app** and tap **Just looking? Try a demo child**.
+2. Tap **Ask about Sam**, then **Crying or upset**. The parent's notes appear at once, and a short AI answer follows, labelled with where it ran.
+3. Type `he keeps hitting his ear`, then `he ran off`. Emergency words skip AI and open the emergency screen.
+4. Tap **Hand to a carer** for the babysitter view and flashcards, and **QR card** to scan the card with another phone's camera.
+
+In desktop Chrome with Gemini Nano, answers say **"Answered on this device"**. Anywhere else they say **"Answered in the cloud, names removed"**.
+
+### Android app
+
+1. On an Android phone, download **[knowme-android.apk](https://github.com/Duaezehra1/knowme/releases/latest/download/knowme-android.apk)** from the latest release and install it (allow installs from your browser when asked).
+2. Tap **Just looking? Try a demo child**, then try **Ask** as above.
+
+On phones with Gemini Nano (for example Pixel 9 or 10, Galaxy S25) answers run **on the phone**. The cloud is protected by **Firebase App Check**, which only trusts registered builds: on other phones this test APK shows the parent's notes with *"The AI couldn't answer just now"* instead of a cloud answer. Everything else (passport, emergency, QR card, flashcards, carer view) works on every phone, and cloud answers can be seen on the website and in the demo video.
+
+### Chrome extension
+
+1. Download **[knowme-chrome-extension.zip](https://knowme-passport.web.app/downloads/knowme-chrome-extension.zip)** and unzip it.
+2. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the unzipped folder.
+3. Click the KnowMe icon to open the side panel. Select text on any page and right-click **Add to KnowMe passport**.
+
+The extension uses Gemini Nano only (App Check's reCAPTCHA cannot run inside extension pages), and falls back to the parent's notes without it.
+
+**On-device AI in Chrome** needs desktop Chrome 139+, 22 GB free disk space, and a GPU with more than 4 GB VRAM or 16 GB RAM with 4+ CPU cores. Check `chrome://on-device-internals`. Without it, KnowMe still works.
 
 ## Run it yourself
 
@@ -77,7 +98,7 @@ Load the extension at `chrome://extensions` → Developer mode → Load unpacked
 
 1. Register an Android app (`app.knowme.passport`) in your Firebase project and put its `google-services.json` in `android/app/`.
 2. Open `android/` in Android Studio, or run `./gradlew assembleDebug`.
-3. For cloud help, copy the App Check debug token from logcat into Firebase console → App Check → Manage debug tokens.
+3. For cloud help on a debug build, open the app's **Settings → Developer: App Check debug token → Create token → Copy**, and add it in Firebase console → App Check → KnowMe Android → Manage debug tokens.
 
 ## Project structure
 

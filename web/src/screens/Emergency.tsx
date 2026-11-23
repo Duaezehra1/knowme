@@ -2,13 +2,17 @@ import { Avatar, CallButtons, EntryCard, Page } from '../components/ui'
 import type { AppContext } from '../context'
 import type { SectionId } from '../data/types'
 
-const ORDER: SectionId[] = ['safety', 'medical', 'calming', 'communication']
+const ORDER: SectionId[] = ['safety', 'medical', 'calming']
 
-/** No AI here: instant, offline, and the same every time (FR-12, NF-01). */
+/** No AI here: instant, offline, and the same every time (FR-12, NF-01). Kept short on purpose. */
 export function Emergency({ ctx, said }: { ctx: AppContext; said: string }) {
   const { passport } = ctx
   const name = passport.child.firstName
-  const entries = ORDER.flatMap((s) => passport.entries.filter((e) => e.section === s))
+  const entries = [
+    ...ORDER.flatMap((s) => passport.entries.filter((e) => e.section === s)),
+    // Only the first two ways of communicating; the rest are a tap away in Ask.
+    ...passport.entries.filter((e) => e.section === 'communication').slice(0, 2),
+  ]
 
   return (
     <Page ctx={ctx} title="Emergency" back="/">

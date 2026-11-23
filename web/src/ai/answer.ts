@@ -56,10 +56,12 @@ export async function answerQuestion(
     answerSchema,
     'answer',
     prompt,
+    '{"found": "found" | "partial" | "none", "answer": string, "usedIds": [string]}',
   )
   // Guardrail: keep only ids we actually gave; no cited entry means no AI text is shown (NF-16).
   const used = (data.usedIds ?? []).map((id) => usable[ids.indexOf(id.replace(/[[\]\s]/g, ''))]).filter(Boolean)
-  const found = data.found === 'found' || data.found === 'partial' ? data.found : 'none'
+  // A reply that cites facts but forgot the "found" field still counts; an explicit "none" never does.
+  const found = data.found === 'found' || data.found === 'partial' ? data.found : data.found === undefined && used.length > 0 ? 'partial' : 'none'
   // The model sometimes cites ids inline ("[e1]"); the entries are shown under the answer instead.
   const raw = (data.answer ?? '').replace(/\s*\[e\d+\]/gi, '').replace(/\s+([.,;:!?])/g, '$1')
   const text = (redactor ? redactor.restore(raw) : raw).trim()

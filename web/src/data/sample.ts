@@ -1,3 +1,33 @@
+import shared from '../../../shared/knowme.json'
+import { createPassport, makeEntry } from './store'
+import type { Passport, SectionId } from './types'
+
+/**
+ * A ready-made passport for a fictional child, so anyone (and every judge) can try KnowMe
+ * in one tap, with or without AI. Shared with the Android app (SRS PR-07: no real child's data).
+ */
+export function demoPassport(): Passport {
+  const d = shared.demo
+  const p = createPassport({
+    firstName: d.child.firstName,
+    age: d.child.age,
+    avatar: d.child.avatar,
+    contactName: d.contact.name,
+    contactRelation: d.contact.relation,
+    phone: d.contact.phone,
+    country: 'OTHER',
+    emergencyNumber: d.emergencyNumber,
+  })
+  return {
+    ...p,
+    demo: true,
+    child: { ...p.child, aboutMe: d.child.aboutMe },
+    // Sam is made up, so cloud help is on: judges without on-device AI still see AI answers.
+    settings: { ...p.settings, cloudHelp: true },
+    entries: d.entries.map((e) => makeEntry({ ...e, section: e.section as SectionId, source: 'owner' })),
+  }
+}
+
 /** Fictional sample notes for the demo and judges (SRS PR-07: no real child's data). */
 export const SAMPLE_NOTES = `Sam is 7 and autistic. He doesn't speak much, but he has his own words.
 When he says "ba-ba" and points at the window, he wants to watch the buses. Two minutes at the window and then saying "bus finished" usually works.
