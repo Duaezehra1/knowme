@@ -1,0 +1,312 @@
+/* Icons, avatars, illustrations and flashcards. */
+:root {
+  --c-communication: #2f6fd6;
+  --c-calming: #2b8f52;
+  --c-upsets: #c76d0a;
+  --c-likes: #b58900;
+  --c-pain: #cf3c66;
+  --c-medical: #cc3434;
+  --c-routine: #6a50d4;
+  --c-safety: #0b8a80;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-communication: #8db4ff;
+    --c-calming: #7fd6a1;
+    --c-upsets: #ffb766;
+    --c-likes: #f5d061;
+    --c-pain: #ff8fb0;
+    --c-medical: #ff8f8f;
+    --c-routine: #b9a8ff;
+    --c-safety: #6fe0cf;
+  }
+}
+
+/* ---------- Tones: tinted background + matching foreground ---------- */
+.tone-communication {
+  --tone-bg: var(--t-communication);
+  --tone-fg: var(--c-communication);
+}
+.tone-calming {
+  --tone-bg: var(--t-calming);
+  --tone-fg: var(--c-calming);
+}
+.tone-upsets {
+  --tone-bg: var(--t-upsets);
+  --tone-fg: var(--c-upsets);
+}
+.tone-likes {
+  --tone-bg: var(--t-likes);
+  --tone-fg: var(--c-likes);
+}
+.tone-pain {
+  --tone-bg: var(--t-pain);
+  --tone-fg: var(--c-pain);
+}
+.tone-medical {
+  --tone-bg: var(--t-medical);
+  --tone-fg: var(--c-medical);
+}
+.tone-routine {
+  --tone-bg: var(--t-routine);
+  --tone-fg: var(--c-routine);
+}
+.tone-safety {
+  --tone-bg: var(--t-safety);
+  --tone-fg: var(--c-safety);
+}
+
+.icon-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: 14px;
+  background: var(--tone-bg, var(--brand-soft));
+  color: var(--tone-fg, var(--brand));
+}
+.tile .icon-badge,
+.situation .icon-badge {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+/* Icons inside buttons and text sit on the text line. */
+.button svg,
+button svg,
+.chip svg,
+.link svg {
+  flex: none;
+}
+.inline-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Illustrated avatars ---------- */
+.avatar {
+  color: #fff;
+  font-weight: 800;
+}
+.av-teal {
+  background: linear-gradient(140deg, #0b7a6e, #35c9b5);
+}
+.av-coral {
+  background: linear-gradient(140deg, #e2553a, #ff9f80);
+}
+.av-sky {
+  background: linear-gradient(140deg, #2f6fd6, #79b0ff);
+}
+.av-violet {
+  background: linear-gradient(140deg, #6a50d4, #b29dff);
+}
+.av-gold {
+  background: linear-gradient(140deg, #d69200, #ffd166);
+}
+.av-rose {
+  background: linear-gradient(140deg, #cf3c66, #ff9ab6);
+}
+.avatar-picker button {
+  color: #fff;
+  border: 3px solid transparent;
+}
+.avatar-picker button[aria-pressed='true'] {
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px var(--surface) inset;
+}
+.colour-picker {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.colour-picker button {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  box-shadow: none;
+}
+.colour-picker button[aria-pressed='true'] {
+  border-color: var(--text);
+}
+
+/* ---------- Illustrations ---------- */
+.scene {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto;
+}
+.scene.small {
+  max-width: 220px;
+}
+
+/* ---------- Situation tiles with tones ---------- */
+.situation {
+  background: var(--tone-bg, var(--surface));
+  border-color: transparent;
+}
+.situation .icon-badge {
+  color: var(--tone-fg);
+}
+.situation.urgent {
+  background: var(--danger);
+  color: #fff;
+}
+.situation.urgent .icon-badge {
+  background: rgb(255 255 255 / 22%);
+  color: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  .situation.urgent {
+    color: #1a0a0c;
+  }
+  .situation.urgent .icon-badge {
+    color: #1a0a0c;
+  }
+}
+
+/* ---------- Flashcards ---------- */
+.deck {
+  display: grid;
+  gap: 12px;
+}
+.deck-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.deck-dots {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.deck-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.deck-dots span.on {
+  background: var(--brand);
+  width: 18px;
+  border-radius: 999px;
+}
+.flashcard {
+  position: relative;
+  perspective: 1200px;
+  cursor: pointer;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline-offset: 6px;
+}
+.flashcard::before,
+.flashcard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: var(--tone-bg);
+  z-index: 0;
+}
+.flashcard::before {
+  transform: translateY(14px) scale(0.92);
+  opacity: 0.45;
+}
+.flashcard::after {
+  transform: translateY(7px) scale(0.96);
+  opacity: 0.75;
+}
+.fc-inner {
+  position: relative;
+  z-index: 1;
+  min-height: 260px;
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: rise 0.3s ease-out both;
+}
+.flashcard.flipped .fc-inner {
+  transform: rotateY(180deg);
+}
+.fc-face {
+  grid-area: 1 / 1;
+  border-radius: 28px;
+  padding: 22px;
+  display: grid;
+  align-content: space-between;
+  gap: 16px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow: var(--shadow-lift);
+}
+.fc-front {
+  background:
+    radial-gradient(120% 120% at 100% 0%, color-mix(in srgb, var(--tone-fg) 14%, transparent), transparent 60%),
+    var(--surface);
+  border: 2px solid color-mix(in srgb, var(--tone-fg) 35%, transparent);
+}
+.fc-back {
+  background: var(--tone-bg);
+  border: 2px solid color-mix(in srgb, var(--tone-fg) 35%, transparent);
+  transform: rotateY(180deg);
+  align-content: start;
+}
+.fc-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  color: var(--tone-fg);
+}
+.fc-signal {
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.fc-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.fc-block {
+  display: grid;
+  gap: 4px;
+}
+.fc-block .k {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tone-fg);
+}
+.fc-block p {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.deck-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-inner {
+    transition: none;
+  }
+}
+
+/* ---------- Nav icons ---------- */
+.bottom-nav a .nav-icon svg {
+  display: block;
+}

@@ -1,0 +1,33 @@
+# Dependencies and builds
+node_modules/
+dist/
+dist-extension/
+*.tsbuildinfo
+
+# Local secrets (Firebase keys, App Check debug tokens)
+.env.local
+**/.env.local
+local.properties
+
+# Tools and caches
+.claude/
+**/.claude/
+.firebase/
+*.log
+.DS_Store
+
+# Android
+android/app/google-services.json
+android/app/src/main/assets/knowme.json
+android/.kotlin/
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/captures/
+*.iml
+*.apk
+*.aab
+
+# Personal documents kept out of the public repo
+KnowMe – Software Requirements Specification.pdf

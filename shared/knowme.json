@@ -1,0 +1,509 @@
+{
+  "schemaVersion": 1,
+  "sections": [
+    {
+      "id": "communication",
+      "title": "How I communicate",
+      "short": "Talking",
+      "icon": "message-circle",
+      "question": "What sounds, words, signs or gestures does {name} use, and what do they mean?",
+      "signalLabel": "{name} says or does…",
+      "meaningLabel": "It means…",
+      "whatToDoLabel": "What helps (optional)",
+      "examples": [
+        {
+          "signal": "Says \"ba-ba\" and points",
+          "meaning": "Wants to watch the buses",
+          "whatToDo": ""
+        },
+        {
+          "signal": "Pulls your hand to the fridge",
+          "meaning": "Hungry",
+          "whatToDo": "Offer a snack"
+        },
+        {
+          "signal": "Flaps hands",
+          "meaning": "Happy or excited",
+          "whatToDo": "Let them, it's fine"
+        }
+      ]
+    },
+    {
+      "id": "calming",
+      "title": "What calms me",
+      "short": "Calming",
+      "icon": "leaf",
+      "question": "What helps {name} when upset, scared or overwhelmed?",
+      "signalLabel": "This calms {name}…",
+      "meaningLabel": "",
+      "whatToDoLabel": "How to do it (optional)",
+      "examples": [
+        {
+          "signal": "Humming a favourite song",
+          "meaning": "",
+          "whatToDo": "Hum quietly close by"
+        },
+        {
+          "signal": "A tight hug or heavy blanket",
+          "meaning": "",
+          "whatToDo": ""
+        },
+        {
+          "signal": "A quiet corner",
+          "meaning": "",
+          "whatToDo": "Dim the lights, stay near"
+        }
+      ]
+    },
+    {
+      "id": "upsets",
+      "title": "What upsets me",
+      "short": "Upsets",
+      "icon": "zap",
+      "question": "What upsets {name}? Noises, changes, touch, crowds, certain words?",
+      "signalLabel": "This upsets {name}…",
+      "meaningLabel": "",
+      "whatToDoLabel": "What to do instead (optional)",
+      "examples": [
+        {
+          "signal": "Loud noises like hand dryers",
+          "meaning": "",
+          "whatToDo": "Warn first, or avoid"
+        },
+        {
+          "signal": "Sudden changes to the plan",
+          "meaning": "",
+          "whatToDo": "Say what happens next"
+        },
+        {
+          "signal": "Being touched on the head",
+          "meaning": "",
+          "whatToDo": "Ask before touching"
+        }
+      ]
+    },
+    {
+      "id": "likes",
+      "title": "What I love",
+      "short": "Loves",
+      "icon": "heart",
+      "question": "What does {name} love? Favourite things, people, songs, foods?",
+      "signalLabel": "{name} loves…",
+      "meaningLabel": "",
+      "whatToDoLabel": "Good to know (optional)",
+      "examples": [
+        {
+          "signal": "Buses and trains",
+          "meaning": "",
+          "whatToDo": "Great to talk about"
+        },
+        {
+          "signal": "Banana slices",
+          "meaning": "",
+          "whatToDo": ""
+        },
+        {
+          "signal": "The colour yellow",
+          "meaning": "",
+          "whatToDo": ""
+        }
+      ]
+    },
+    {
+      "id": "pain",
+      "title": "How I show pain or illness",
+      "short": "Pain",
+      "icon": "bandage",
+      "question": "How can someone tell {name} is hurt, ill, hungry or needs the toilet?",
+      "signalLabel": "When {name}…",
+      "meaningLabel": "It usually means…",
+      "whatToDoLabel": "What to do",
+      "examples": [
+        {
+          "signal": "Hits their ear and says \"ow-ee\"",
+          "meaning": "Pain, or it's too loud",
+          "whatToDo": "Take them somewhere quiet"
+        },
+        {
+          "signal": "Goes very quiet and lies on the floor",
+          "meaning": "Feeling ill",
+          "whatToDo": "Check for a temperature, call me"
+        },
+        {
+          "signal": "Rocks by the door",
+          "meaning": "Needs the toilet",
+          "whatToDo": ""
+        }
+      ]
+    },
+    {
+      "id": "medical",
+      "title": "Medical",
+      "short": "Medical",
+      "icon": "stethoscope",
+      "question": "Allergies, conditions or medicines a carer, nurse or doctor must know?",
+      "signalLabel": "Allergy, condition or medicine",
+      "meaningLabel": "",
+      "whatToDoLabel": "What to do",
+      "examples": [
+        {
+          "signal": "Allergic to peanuts",
+          "meaning": "",
+          "whatToDo": "EpiPen is in the front pocket of the bag"
+        },
+        {
+          "signal": "Has epilepsy",
+          "meaning": "",
+          "whatToDo": "Time the seizure, call 1122 if over 5 minutes"
+        },
+        {
+          "signal": "Takes melatonin at bedtime",
+          "meaning": "",
+          "whatToDo": ""
+        }
+      ]
+    },
+    {
+      "id": "routine",
+      "title": "My day",
+      "short": "My day",
+      "icon": "clock",
+      "question": "Eating, toilet, sleep and other routines that matter to {name}?",
+      "signalLabel": "Routine",
+      "meaningLabel": "",
+      "whatToDoLabel": "Details (optional)",
+      "examples": [
+        {
+          "signal": "Needs the toilet every 2 hours",
+          "meaning": "",
+          "whatToDo": "Remind gently"
+        },
+        {
+          "signal": "Tired after lunch",
+          "meaning": "",
+          "whatToDo": "20 minutes of quiet time"
+        },
+        {
+          "signal": "Eats only soft food",
+          "meaning": "",
+          "whatToDo": ""
+        }
+      ]
+    },
+    {
+      "id": "safety",
+      "title": "Keep me safe",
+      "short": "Safety",
+      "icon": "shield-check",
+      "question": "Does {name} wander or run off? What dangers don't they understand? What if they get lost?",
+      "signalLabel": "Safety risk or rule",
+      "meaningLabel": "",
+      "whatToDoLabel": "What to do",
+      "examples": [
+        {
+          "signal": "Runs off when they see water",
+          "meaning": "",
+          "whatToDo": "Always hold hands near water"
+        },
+        {
+          "signal": "Doesn't understand traffic",
+          "meaning": "",
+          "whatToDo": "Hold hands near roads"
+        },
+        {
+          "signal": "Won't answer to their name if lost",
+          "meaning": "",
+          "whatToDo": "Speak softly and stay with them"
+        }
+      ]
+    }
+  ],
+  "situations": [
+    {
+      "id": "crying",
+      "icon": "cloud-rain",
+      "label": "Crying or upset",
+      "query": "crying upset distressed screaming",
+      "sections": [
+        "calming",
+        "upsets",
+        "communication"
+      ],
+      "tone": "calming"
+    },
+    {
+      "id": "hurt",
+      "icon": "thermometer",
+      "label": "Hurt or unwell",
+      "query": "pain hurt sick ill ear",
+      "sections": [
+        "pain",
+        "medical"
+      ],
+      "tone": "pain"
+    },
+    {
+      "id": "saying",
+      "icon": "message-circle-question",
+      "label": "What do they mean?",
+      "query": "says means wants",
+      "sections": [
+        "communication"
+      ],
+      "tone": "communication"
+    },
+    {
+      "id": "overwhelmed",
+      "icon": "ear",
+      "label": "Overwhelmed or scared",
+      "query": "loud noise scared overwhelmed",
+      "sections": [
+        "upsets",
+        "calming"
+      ],
+      "tone": "routine"
+    },
+    {
+      "id": "food",
+      "icon": "utensils",
+      "label": "Food and drink",
+      "query": "eat food hungry drink water snack",
+      "sections": [
+        "routine",
+        "likes",
+        "medical"
+      ],
+      "tone": "likes"
+    },
+    {
+      "id": "toilet",
+      "icon": "toilet",
+      "label": "Toilet",
+      "query": "toilet",
+      "sections": [
+        "routine",
+        "pain"
+      ],
+      "tone": "safety"
+    },
+    {
+      "id": "happy",
+      "icon": "smile",
+      "label": "Keep them happy",
+      "query": "loves likes happy",
+      "sections": [
+        "likes",
+        "calming"
+      ],
+      "tone": "upsets"
+    },
+    {
+      "id": "lost",
+      "icon": "siren",
+      "label": "Ran off or lost",
+      "query": "",
+      "sections": [
+        "safety"
+      ],
+      "emergency": true,
+      "tone": "medical"
+    }
+  ],
+  "emergencyPhrases": [
+    "not breathing",
+    "isn't breathing",
+    "can't breathe",
+    "cannot breathe",
+    "stopped breathing",
+    "choking",
+    "seizure",
+    "fitting",
+    "convulsing",
+    "unconscious",
+    "won't wake",
+    "not waking",
+    "passed out",
+    "fainted",
+    "allergic reaction",
+    "anaphylaxis",
+    "lips swelling",
+    "face swelling",
+    "bleeding badly",
+    "lots of blood",
+    "head injury",
+    "missing",
+    "ran off",
+    "ran away",
+    "run off",
+    "can't find",
+    "cannot find",
+    "lost him",
+    "lost her",
+    "is lost"
+  ],
+  "synonyms": [
+    [
+      "cry",
+      "crying",
+      "cries",
+      "tears",
+      "sobbing",
+      "upset",
+      "distressed"
+    ],
+    [
+      "scream",
+      "screaming",
+      "screams",
+      "shouting",
+      "yelling",
+      "shriek"
+    ],
+    [
+      "pain",
+      "hurt",
+      "hurts",
+      "hurting",
+      "ow",
+      "owee",
+      "ouch",
+      "sore",
+      "ache",
+      "aching"
+    ],
+    [
+      "ear",
+      "ears",
+      "hitting ear",
+      "covering ears",
+      "loud",
+      "noise",
+      "noisy"
+    ],
+    [
+      "hit",
+      "hitting",
+      "hits",
+      "bang",
+      "banging",
+      "slap"
+    ],
+    [
+      "bite",
+      "biting",
+      "bites"
+    ],
+    [
+      "run",
+      "ran",
+      "running",
+      "wander",
+      "wandering",
+      "bolt",
+      "bolting",
+      "escape"
+    ],
+    [
+      "eat",
+      "eating",
+      "food",
+      "hungry",
+      "meal",
+      "lunch",
+      "dinner",
+      "snack",
+      "fridge"
+    ],
+    [
+      "drink",
+      "thirsty",
+      "water",
+      "juice"
+    ],
+    [
+      "toilet",
+      "potty",
+      "bathroom",
+      "wee",
+      "poo",
+      "nappy",
+      "diaper"
+    ],
+    [
+      "sleep",
+      "tired",
+      "sleepy",
+      "nap",
+      "bed",
+      "bedtime"
+    ],
+    [
+      "calm",
+      "calming",
+      "soothe",
+      "settle",
+      "relax",
+      "comfort"
+    ],
+    [
+      "flap",
+      "flapping",
+      "rocking",
+      "spinning",
+      "stim",
+      "stimming"
+    ],
+    [
+      "sick",
+      "ill",
+      "fever",
+      "temperature",
+      "vomit",
+      "vomiting",
+      "quiet"
+    ],
+    [
+      "allergy",
+      "allergic",
+      "allergies",
+      "peanut",
+      "nuts"
+    ],
+    [
+      "medicine",
+      "medication",
+      "inhaler",
+      "tablet",
+      "dose",
+      "epipen"
+    ],
+    [
+      "happy",
+      "laughing",
+      "smiling",
+      "excited",
+      "love",
+      "loves"
+    ],
+    [
+      "scared",
+      "afraid",
+      "fear",
+      "frightened",
+      "anxious",
+      "overwhelmed"
+    ],
+    [
+      "touch",
+      "hug",
+      "hold",
+      "grab",
+      "pressure"
+    ]
+  ],
+  "prompts": {
+    "organize": "You organise a parent's notes about their child, {name}, into passport entries that help other carers understand {name}.\nRules:\n- Use ONLY facts stated in the NOTES. Never add advice, guesses or facts of your own.\n- Make one entry per distinct fact.\n- section is one of: communication, calming, upsets, likes, pain, medical, routine, safety.\n- signal: what a carer sees or hears, or the fact itself. At most 15 words.\n- meaning: what it means. Fill it for communication and pain entries; otherwise use an empty string.\n- whatToDo: what helps, only if the NOTES say so; otherwise an empty string.\n- quote: copy 3 to 12 words EXACTLY, word for word, from the NOTES that support the entry.\n\nNOTES:\n\"\"\"\n{notes}\n\"\"\"",
+    "answer": "You help a carer look after {name}, a child who cannot easily explain themselves.\nThe carer says: \"{question}\"\n\nThese are the ONLY facts you may use, from {name}'s passport, written by the parent:\n{facts}\n\nRules:\n- Use only these facts. Never add medical advice or anything not in them.\n- answer: at most 3 short, calm sentences (under 60 words) saying what it probably means and what the carer should do. Talk to the carer directly as \"you\". The parent is {parent}: if the carer should contact the parent, say \"call {parent}\", never \"call me\". Do not write ids in the answer.\n- usedIds: the ids of the facts you used, for example [\"e2\"].\n- found: \"found\" if the facts clearly answer it, \"partial\" if they only help a little, \"none\" if none of them fit (then answer is an empty string).",
+    "observation": "A carer noticed something new about {name}: \"{observation}\"\n\nCurrent passport entries that may be related:\n{facts}\n\nPropose ONE passport change using only what the carer said.\n- action: \"add\" for a new fact, or \"edit\" to improve an existing entry (then set editId to its id).\n- section is one of: communication, calming, upsets, likes, pain, medical, routine, safety.\n- signal, meaning and whatToDo follow the same meaning as the existing entries. Use empty strings for parts the carer did not say."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "KnowMe: passport for children who can't explain themselves",
+  "short_name": "KnowMe",
+  "description": "Keep your child's KnowMe passport beside any page. Ask it what they need, and add notes from reports or emails with private on-device AI.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "139",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Open KnowMe"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["sidePanel", "contextMenus", "storage"]
+}
