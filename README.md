@@ -76,7 +76,7 @@ On phones with Gemini Nano (for example Pixel 9 or 10, Galaxy S25) answers run *
 2. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the unzipped folder.
 3. Click the KnowMe icon to open the side panel. Select text on any page and right-click **Add to KnowMe passport**.
 
-The extension uses Gemini Nano only (App Check's reCAPTCHA cannot run inside extension pages), and falls back to the parent's notes without it.
+The extension is **on-device only by design**. It is where parents add therapist reports and letters from web pages, so those never leave the laptop. (It also can't use the cloud: App Check's reCAPTCHA cannot run inside extension pages.) On a laptop without Gemini Nano it shows the family's own notes straight away, with a link to the website for cloud answers.
 
 **On-device AI in Chrome** needs desktop Chrome 139+, 22 GB free disk space, and a GPU with more than 4 GB VRAM or 16 GB RAM with 4+ CPU cores. Check `chrome://on-device-internals`. Without it, KnowMe still works.
 

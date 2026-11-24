@@ -3,11 +3,12 @@ import { answerQuestion, type Answer } from '../ai/answer'
 import { chooseRoute } from '../ai/model'
 import { findMatches, isEmergency } from '../ai/search'
 import { Icon, IconBadge } from '../components/Icon'
-import { CallButtons, EntryCard, Page, SourceChip } from '../components/ui'
+import { CallButtons, EntryCard, Page, SourceChip, WebAppLink } from '../components/ui'
 import type { AppContext } from '../context'
 import { situationEntries } from '../data/glance'
 import { SITUATIONS, withName, type Situation } from '../data/rules'
 import type { Entry } from '../data/types'
+import { isExtension } from '../firebase'
 import { useElapsed } from '../hooks'
 
 function speak(text: string) {
@@ -178,6 +179,12 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
                 </div>
               )}
               {aiFailed && <p className="muted small">The AI couldn't answer just now, so here is exactly what {name}'s family wrote.</p>}
+              {!route && isExtension && (
+                <div className="notice">
+                  <span className="muted small">This laptop can't run private AI, so here is exactly what {name}'s family wrote.</span>
+                  <WebAppLink />
+                </div>
+              )}
               <div className="row">
                 <h2 style={{ fontSize: '1rem' }}>From {name}'s passport</h2>
                 {(!answer || answer.found === 'none' || aiFailed) && !thinking && <SourceChip source="offline_search" />}

@@ -1,5 +1,5 @@
 import { getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, ThinkingLevel, type GenerativeModel, type ObjectSchema } from 'firebase/ai'
-import { firebaseApp } from '../firebase'
+import { cloudAvailable, firebaseApp } from '../firebase'
 import type { AnswerSource, Passport } from '../data/types'
 
 /**
@@ -34,7 +34,7 @@ export async function deviceStatus(): Promise<DeviceStatus> {
 /** The route for an AI job right now, or null when only offline search is possible. */
 export function chooseRoute(passport: Passport, status: DeviceStatus): Route | null {
   if (status === 'available') return 'device'
-  if (passport.settings.cloudHelp && navigator.onLine && firebaseApp) return 'cloud'
+  if (passport.settings.cloudHelp && navigator.onLine && cloudAvailable) return 'cloud'
   return null
 }
 

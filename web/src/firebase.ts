@@ -19,8 +19,15 @@ const siteKey: string | undefined = import.meta.env.VITE_RECAPTCHA_SITE_KEY || u
 const debugToken: string | undefined = import.meta.env.DEV ? import.meta.env.VITE_APPCHECK_DEBUG_TOKEN || undefined : undefined
 const isLocalhost = ['localhost', '127.0.0.1'].includes(location.hostname)
 // reCAPTCHA can't run inside a Chrome extension page, so the extension skips App Check and
-// uses on-device AI only (cloud calls there would be rejected by App Check).
-const isExtension = location.protocol === 'chrome-extension:'
+// uses on-device AI only (cloud calls there would be rejected by App Check). That also keeps
+// reports and letters that parents add from web pages on the laptop.
+export const isExtension = location.protocol === 'chrome-extension:'
+
+/** Cloud AI needs App Check, so it is never tried inside the extension. */
+export const cloudAvailable = firebaseApp !== null && !isExtension
+
+/** The hosted web app, where cloud answers work on any device. */
+export const WEB_APP_URL = 'https://knowme-passport.web.app'
 
 if (firebaseApp && !isExtension && (siteKey || (isLocalhost && debugToken))) {
   if (isLocalhost && debugToken) {

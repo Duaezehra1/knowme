@@ -5,6 +5,7 @@ import type { AppContext } from '../context'
 import { photoToDataUrl } from '../data/photo'
 import { deleteEverything, exportPassport, importPassport, newId, savePassport } from '../data/store'
 import type { Contact } from '../data/types'
+import { isExtension } from '../firebase'
 
 /** Child details, who to call, cloud help, backup and delete everything (FR-08, FR-26 to FR-28). */
 export function Settings({ ctx }: { ctx: AppContext }) {
@@ -176,24 +177,28 @@ export function Settings({ ctx }: { ctx: AppContext }) {
       <section className="card">
         <h2>AI and privacy</h2>
         <AiStatus ctx={ctx} />
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={passport.settings.cloudHelp}
-            onChange={(e) => {
-              // Read the value now: by the time the queued save runs, React has reset the controlled box.
-              const on = e.target.checked
-              ctx.update((p) => ({ ...p, settings: { ...p.settings, cloudHelp: on } })).then(saved)
-            }}
-          />
-          <span>
-            <strong>Cloud help</strong>
-            <span className="muted small">
-              Off by default. When on, devices without private AI can ask Google's cloud AI while online. KnowMe sends only the question and matching entries, with names and phone
-              numbers removed, and never the Medical section.
+        {isExtension ? (
+          <p className="muted small">Cloud help is not part of the extension: here, AI runs only on this laptop.</p>
+        ) : (
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={passport.settings.cloudHelp}
+              onChange={(e) => {
+                // Read the value now: by the time the queued save runs, React has reset the controlled box.
+                const on = e.target.checked
+                ctx.update((p) => ({ ...p, settings: { ...p.settings, cloudHelp: on } })).then(saved)
+              }}
+            />
+            <span>
+              <strong>Cloud help</strong>
+              <span className="muted small">
+                Off by default. When on, devices without private AI can ask Google's cloud AI while online. KnowMe sends only the question and matching entries, with names and phone
+                numbers removed, and never the Medical section.
+              </span>
             </span>
-          </span>
-        </label>
+          </label>
+        )}
       </section>
 
       <section className="card">

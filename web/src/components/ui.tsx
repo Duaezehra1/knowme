@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { downloadDeviceModel } from '../ai/model'
 import { organizeSchema } from '../ai/organize'
 import type { AppContext } from '../context'
+import { isExtension, WEB_APP_URL } from '../firebase'
 import { sectionInfo } from '../data/rules'
 import type { AnswerSource, Contact, Entry, Passport } from '../data/types'
 import { avatarParts, Icon } from './Icon'
@@ -160,6 +161,15 @@ export function Toast({ message }: { message: string | null }) {
   )
 }
 
+/** From the extension: opens the web app, where cloud help gives AI answers on any device. */
+export function WebAppLink() {
+  return (
+    <a className="link inline-icon" href={WEB_APP_URL} target="_blank" rel="noreferrer">
+      <Icon name="sparkles" size={18} /> See cloud AI answers on the KnowMe website
+    </a>
+  )
+}
+
 /** On-device AI status with a download button (FR-03, OF-07). */
 export function AiStatus({ ctx }: { ctx: AppContext }) {
   const [progress, setProgress] = useState<number | null>(null)
@@ -211,6 +221,20 @@ export function AiStatus({ ctx }: { ctx: AppContext }) {
         </button>
         {!ctx.online && <span className="muted small">Connect to the internet once to download it.</span>}
         {error && <span className="error">{error}</span>}
+      </div>
+    )
+  }
+  if (isExtension) {
+    // The extension never uses the cloud, so say why and point to the web app instead of failing.
+    return (
+      <div className="notice">
+        <strong className="inline-icon">
+          <Icon name="lock" size={18} /> Private by design
+        </strong>
+        <span className="muted">
+          The extension only uses AI that runs on this laptop, so reports and notes you add here never leave it. This laptop can't run it, so you see the family's own words.
+        </span>
+        <WebAppLink />
       </div>
     )
   }
