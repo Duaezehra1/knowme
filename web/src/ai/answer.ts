@@ -1,7 +1,7 @@
 import { Schema } from 'firebase/ai'
 import { fillPrompt, PROMPTS, sectionInfo } from '../data/rules'
 import type { AnswerSource, Entry, Passport } from '../data/types'
-import { generateJson, type Route } from './model'
+import { cloudAllowed, generateJson, type Route } from './model'
 import { makeRedactor } from './redact'
 import type { ScoredEntry } from './search'
 
@@ -67,4 +67,57 @@ export async function answerQuestion(
   const text = (redactor ? redactor.restore(raw) : raw).trim()
   if (found === 'none' || used.length === 0 || !text) return { found: 'none', text: '', used: [], source }
   return { found, text, used, source }
+}
+
+/** How long Gemini Nano gets before the cloud is asked too. Laptops without a graphics card can take a minute. */
+export const CLOUD_BACKUP_AFTER_MS = 8_000
+
+/**
+ * Smart hybrid: answers on the device first. If Gemini Nano fails, or is still working after
+ * CLOUD_BACKUP_AFTER_MS, and the parent allowed cloud help, the cloud (names removed) is asked
+ * too and the first useful answer wins. `onBackup` runs when the cloud is brought in.
+ */
+export async function answerHybrid(
+  passport: Passport,
+  question: string,
+  matches: ScoredEntry[],
+  route: Route,
+  onBackup?: () => void,
+): Promise<Answer> {
+  const primary = answerQuestion(passport, question, matches, route)
+  if (route !== 'device' || !cloudAllowed(passport)) return primary
+
+  let timer: number | undefined
+  const slow = new Promise<'slow'>((resolve) => {
+    timer = window.setTimeout(() => resolve('slow'), CLOUD_BACKUP_AFTER_MS)
+  })
+  const first = await Promise.race([primary.then((answer) => ({ answer }), () => 'failed' as const), slow])
+  window.clearTimeout(timer)
+  if (typeof first === 'object') return first.answer
+
+  onBackup?.()
+  const cloud = answerQuestion(passport, question, matches, 'cloud')
+  return first === 'failed' ? cloud : firstUseful([primary, cloud])
+}
+
+/** The first answer that found something; otherwise a "none" answer, or the last error if both failed. */
+function firstUseful(tasks: Promise<Answer>[]): Promise<Answer> {
+  return new Promise((resolve, reject) => {
+    let pending = tasks.length
+    let none: Answer | null = null
+    let error: unknown
+    for (const task of tasks) {
+      task
+        .then(
+          (answer) => (answer.found !== 'none' ? resolve(answer) : (none ??= answer)),
+          (e: unknown) => (error = e),
+        )
+        .finally(() => {
+          if (--pending === 0) {
+            if (none) resolve(none)
+            else reject(error)
+          }
+        })
+    }
+  })
 }

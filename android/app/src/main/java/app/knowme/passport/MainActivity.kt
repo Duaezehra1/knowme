@@ -44,13 +44,29 @@ class KnowMeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
-        // App Check (SE-01): debug builds use the debug provider; its token is printed to logcat
-        // and registered in the Firebase console. Release builds would use Play Integrity.
+        // App Check (SE-01): debug builds use the debug provider; its token is registered in the
+        // Firebase console. Release builds would use Play Integrity.
         if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            useJudgeToken()
             Firebase.appCheck.installAppCheckProviderFactory(DebugAppCheckProviderFactory.getInstance())
         }
     }
+
+    /**
+     * The judges' test APK ships one registered debug token, so cloud help works on any phone
+     * without a USB cable or console step. A phone that already has its own token keeps it.
+     */
+    private fun useJudgeToken() {
+        val token = BuildConfig.JUDGE_APPCHECK_TOKEN
+        if (token.isBlank()) return
+        val prefs = getSharedPreferences(debugTokenStore(FirebaseApp.getInstance()), MODE_PRIVATE)
+        if (prefs.getString(DEBUG_SECRET_KEY, null) == null) prefs.edit().putString(DEBUG_SECRET_KEY, token).commit()
+    }
 }
+
+/** Where the App Check debug provider keeps its token. */
+fun debugTokenStore(app: FirebaseApp): String = "com.google.firebase.appcheck.debug.store.${app.persistenceKey}"
+const val DEBUG_SECRET_KEY = "com.google.firebase.appcheck.debug.DEBUG_SECRET"
 
 sealed interface Screen {
     data object Home : Screen

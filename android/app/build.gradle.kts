@@ -1,9 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
 }
+
+// The judges' test APK carries one App Check debug token registered in the Firebase console,
+// so cloud help works on any phone. It lives in local.properties, which is never committed.
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
+}
+val judgeAppCheckToken: String = localProperties.getProperty("knowme.judgeAppCheckToken", "").trim()
 
 android {
     namespace = "app.knowme.passport"
@@ -18,8 +28,12 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "JUDGE_APPCHECK_TOKEN", "\"$judgeAppCheckToken\"")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("String", "JUDGE_APPCHECK_TOKEN", "\"\"")
         }
     }
 
@@ -30,6 +44,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

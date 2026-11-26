@@ -8,7 +8,7 @@ import { SECTIONS, sectionInfo } from '../data/rules'
 import { SAMPLE_NOTES } from '../data/sample'
 import { makeEntry } from '../data/store'
 import type { Proposal, SectionId } from '../data/types'
-import { isExtension } from '../firebase'
+import { deviceOnly } from '../firebase'
 import { useElapsed } from '../hooks'
 
 /**
@@ -129,7 +129,7 @@ export function Build({ ctx, initialNotes, source }: { ctx: AppContext; initialN
         ) : (
           <p className="notice warm">
             AI isn't available on this device right now. The guided questions work everywhere
-            {isExtension ? ', or you can add notes yourself in each section.' : ', and you can turn on cloud help in Settings.'}
+            {deviceOnly ? ', or you can add notes yourself in each section.' : ', and you can turn on cloud help in Settings.'}
           </p>
         )}
         {busy && route === 'device' && elapsed > 10 && (

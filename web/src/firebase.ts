@@ -1,5 +1,5 @@
 import { initializeApp, type FirebaseApp, type FirebaseOptions } from 'firebase/app'
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
+import { CustomProvider, initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 
 // Values come from web/.env.local (see .env.example).
 const config: FirebaseOptions = {
@@ -13,28 +13,45 @@ const config: FirebaseOptions = {
 
 export const firebaseApp: FirebaseApp | null = config.apiKey && config.projectId ? initializeApp(config) : null
 
-// App Check (SE-01): localhost exchanges a registered debug token; the deployed site uses
-// reCAPTCHA Enterprise. The debug token is read in dev builds only, so it never ships.
-const siteKey: string | undefined = import.meta.env.VITE_RECAPTCHA_SITE_KEY || undefined
-const debugToken: string | undefined = import.meta.env.DEV ? import.meta.env.VITE_APPCHECK_DEBUG_TOKEN || undefined : undefined
-const isLocalhost = ['localhost', '127.0.0.1'].includes(location.hostname)
-// reCAPTCHA can't run inside a Chrome extension page, so the extension skips App Check and
-// uses on-device AI only (cloud calls there would be rejected by App Check). That also keeps
-// reports and letters that parents add from web pages on the laptop.
+/** Set only by the extension build (vite.extension.config.ts); always empty on the website. */
+declare const __EXTENSION_APPCHECK_TOKEN__: string
+
 export const isExtension = location.protocol === 'chrome-extension:'
 
-/** Cloud AI needs App Check, so it is never tried inside the extension. */
-export const cloudAvailable = firebaseApp !== null && !isExtension
+// App Check (SE-01):
+// - Website: reCAPTCHA Enterprise. Localhost exchanges a registered debug token (dev builds only).
+// - Extension: reCAPTCHA can't run in extension pages, so the judges' extension build carries one
+//   registered debug token from web/.env.local (never committed). Without it, the extension uses
+//   on-device AI only, because App Check would reject its cloud calls.
+const siteKey: string | undefined = import.meta.env.VITE_RECAPTCHA_SITE_KEY || undefined
+const debugToken: string | undefined = import.meta.env.DEV ? import.meta.env.VITE_APPCHECK_DEBUG_TOKEN || undefined : undefined
+const extensionToken: string | undefined = isExtension ? __EXTENSION_APPCHECK_TOKEN__ || undefined : undefined
+const isLocalhost = ['localhost', '127.0.0.1'].includes(location.hostname)
 
-/** The hosted web app, where cloud answers work on any device. */
-export const WEB_APP_URL = 'https://knowme-passport.web.app'
+function useDebugToken(token: string) {
+  ;(self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: string }).FIREBASE_APPCHECK_DEBUG_TOKEN = token
+}
 
-if (firebaseApp && !isExtension && (siteKey || (isLocalhost && debugToken))) {
-  if (isLocalhost && debugToken) {
-    ;(self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN?: string }).FIREBASE_APPCHECK_DEBUG_TOKEN = debugToken
-  }
+if (firebaseApp && isExtension && extensionToken) {
+  useDebugToken(extensionToken)
+  // In debug mode App Check only uses the debug token, so this provider is never asked for one.
+  initializeAppCheck(firebaseApp, {
+    provider: new CustomProvider({ getToken: () => Promise.reject(new Error('The extension uses its debug token.')) }),
+    isTokenAutoRefreshEnabled: true,
+  })
+} else if (firebaseApp && !isExtension && (siteKey || (isLocalhost && debugToken))) {
+  if (isLocalhost && debugToken) useDebugToken(debugToken)
   initializeAppCheck(firebaseApp, {
     provider: new ReCaptchaEnterpriseProvider(siteKey ?? 'debug-mode'),
     isTokenAutoRefreshEnabled: true,
   })
 }
+
+/** Cloud AI needs App Check, so an extension without a registered token never tries it. */
+export const cloudAvailable = firebaseApp !== null && (!isExtension || extensionToken !== undefined)
+
+/** An extension that can only use on-device AI: it explains why and links to the website. */
+export const deviceOnly = isExtension && !cloudAvailable
+
+/** The hosted web app, where cloud answers work on any device. */
+export const WEB_APP_URL = 'https://knowme-passport.web.app'

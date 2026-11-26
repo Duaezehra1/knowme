@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { answerQuestion, type Answer } from '../ai/answer'
+import { answerHybrid, type Answer } from '../ai/answer'
 import { chooseRoute } from '../ai/model'
 import { findMatches, isEmergency } from '../ai/search'
 import { Icon, IconBadge } from '../components/Icon'
@@ -8,7 +8,7 @@ import type { AppContext } from '../context'
 import { situationEntries } from '../data/glance'
 import { SITUATIONS, withName, type Situation } from '../data/rules'
 import type { Entry } from '../data/types'
-import { isExtension } from '../firebase'
+import { deviceOnly } from '../firebase'
 import { useElapsed } from '../hooks'
 
 function speak(text: string) {
@@ -32,6 +32,8 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
   const [answer, setAnswer] = useState<Answer | null>(null)
   const [thinking, setThinking] = useState(false)
   const [aiFailed, setAiFailed] = useState(false)
+  // True once a slow on-device answer has brought in the cloud as well.
+  const [backup, setBackup] = useState(false)
   const runId = useRef(0)
   const resultRef = useRef<HTMLElement>(null)
   const elapsed = useElapsed(thinking)
@@ -44,15 +46,17 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
     setEntries(found)
     setAnswer(null)
     setAiFailed(false)
+    setBackup(false)
     requestAnimationFrame(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
     if (!route || found.length === 0) return
     setThinking(true)
     try {
-      const result = await answerQuestion(
+      const result = await answerHybrid(
         passport,
         question,
         found.map((entry) => ({ entry, score: 1 })),
         route,
+        () => id === runId.current && setBackup(true),
       )
       if (id === runId.current) setAnswer(result)
     } catch {
@@ -164,7 +168,12 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
                     <span />
                     <span />
                   </span>
-                  {route === 'device' ? 'Writing a short answer on this device' : 'Asking the cloud, names removed'} · {elapsed}s
+                  {backup
+                    ? 'On-device AI is slow here, so the cloud is helping (names removed)'
+                    : route === 'device'
+                      ? 'Writing a short answer on this device'
+                      : 'Asking the cloud, names removed'}{' '}
+                  · {elapsed}s
                 </p>
               )}
               {answer && answer.found !== 'none' && (
@@ -179,7 +188,7 @@ export function Ask({ ctx, initial, situationId }: { ctx: AppContext; initial: s
                 </div>
               )}
               {aiFailed && <p className="muted small">The AI couldn't answer just now, so here is exactly what {name}'s family wrote.</p>}
-              {!route && isExtension && (
+              {!route && deviceOnly && (
                 <div className="notice">
                   <span className="muted small">This laptop can't run private AI, so here is exactly what {name}'s family wrote.</span>
                   <WebAppLink />

@@ -763,11 +763,12 @@ fun AskScreen(state: AppState, passport: Passport, situationId: String?, initial
                         Surface(shape = RoundedCornerShape(20.dp, 20.dp, 20.dp, 6.dp), color = KColors.surface, border = BorderStroke(2.dp, KColors.brand), modifier = Modifier.fillMaxWidth()) {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 Text(a.text, fontSize = 18.sp, fontWeight = FontWeight.Bold, lineHeight = 26.sp)
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    SourceChip(a.source)
-                                    Spacer(Modifier.weight(1f))
+                                // The label shrinks (and wraps) first, so "Read aloud" always stays on one line.
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                                    SourceChip(a.source, Modifier.weight(1f, fill = false))
+                                    Spacer(Modifier.width(8.dp))
                                     TextButton(onClick = { tts[0]?.speak(a.text, TextToSpeech.QUEUE_FLUSH, null, "answer") }) {
-                                        Icon(Icons.AutoMirrored.Outlined.VolumeUp, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("Read aloud")
+                                        Icon(Icons.AutoMirrored.Outlined.VolumeUp, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("Read aloud", maxLines = 1, softWrap = false)
                                     }
                                 }
                             }
@@ -968,7 +969,8 @@ fun SettingsScreen(state: AppState, passport: Passport) {
                 }
             }
         }
-        if (isDebuggable(context)) {
+        // The judges' APK already carries a registered token, so it has nothing to set up here.
+        if (isDebuggable(context) && BuildConfig.JUDGE_APPCHECK_TOKEN.isBlank()) {
             item { DeveloperCard() }
         }
         item {
@@ -994,11 +996,9 @@ fun isDebuggable(context: android.content.Context): Boolean =
     context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
 
 /** The App Check debug provider keeps its token here; showing it saves needing a USB cable and logcat. */
-private fun readDebugToken(context: android.content.Context): String? {
-    val key = com.google.firebase.FirebaseApp.getInstance().persistenceKey
-    return context.getSharedPreferences("com.google.firebase.appcheck.debug.store.$key", android.content.Context.MODE_PRIVATE)
-        .getString("com.google.firebase.appcheck.debug.DEBUG_SECRET", null)
-}
+private fun readDebugToken(context: android.content.Context): String? =
+    context.getSharedPreferences(debugTokenStore(com.google.firebase.FirebaseApp.getInstance()), android.content.Context.MODE_PRIVATE)
+        .getString(DEBUG_SECRET_KEY, null)
 
 @Composable
 private fun DeveloperCard() {

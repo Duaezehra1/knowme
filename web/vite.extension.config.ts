@@ -1,11 +1,19 @@
-import { defineConfig } from 'vite'
+import { fileURLToPath } from 'node:url'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 /**
  * Builds the same KnowMe app as a Chrome extension side panel (web/dist-extension).
  * Load it at chrome://extensions > Developer mode > Load unpacked.
  */
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Optional App Check debug token for the judges' build (see src/firebase.ts). It is read from
+  // web/.env.local, which is never committed, and only this build ever contains it.
+  define: {
+    __EXTENSION_APPCHECK_TOKEN__: JSON.stringify(
+      loadEnv(mode, fileURLToPath(new URL('.', import.meta.url)), '').EXTENSION_APPCHECK_TOKEN ?? '',
+    ),
+  },
   plugins: [react()],
   base: './',
   publicDir: 'extension-public',
@@ -24,4 +32,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))

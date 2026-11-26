@@ -31,10 +31,15 @@ export async function deviceStatus(): Promise<DeviceStatus> {
   }
 }
 
+/** The parent allowed cloud help, the device is online and App Check can vouch for this app. */
+export function cloudAllowed(passport: Passport): boolean {
+  return passport.settings.cloudHelp && navigator.onLine && cloudAvailable
+}
+
 /** The route for an AI job right now, or null when only offline search is possible. */
 export function chooseRoute(passport: Passport, status: DeviceStatus): Route | null {
   if (status === 'available') return 'device'
-  if (passport.settings.cloudHelp && navigator.onLine && cloudAvailable) return 'cloud'
+  if (cloudAllowed(passport)) return 'cloud'
   return null
 }
 

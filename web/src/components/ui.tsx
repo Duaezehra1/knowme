@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { downloadDeviceModel } from '../ai/model'
 import { organizeSchema } from '../ai/organize'
 import type { AppContext } from '../context'
-import { isExtension, WEB_APP_URL } from '../firebase'
+import { deviceOnly, WEB_APP_URL } from '../firebase'
 import { sectionInfo } from '../data/rules'
 import type { AnswerSource, Contact, Entry, Passport } from '../data/types'
 import { avatarParts, Icon } from './Icon'
@@ -224,8 +224,8 @@ export function AiStatus({ ctx }: { ctx: AppContext }) {
       </div>
     )
   }
-  if (isExtension) {
-    // The extension never uses the cloud, so say why and point to the web app instead of failing.
+  if (deviceOnly) {
+    // This extension can't use the cloud, so say why and point to the web app instead of failing.
     return (
       <div className="notice">
         <strong className="inline-icon">

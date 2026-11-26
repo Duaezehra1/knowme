@@ -5,7 +5,7 @@ import type { AppContext } from '../context'
 import { photoToDataUrl } from '../data/photo'
 import { deleteEverything, exportPassport, importPassport, newId, savePassport } from '../data/store'
 import type { Contact } from '../data/types'
-import { isExtension } from '../firebase'
+import { deviceOnly } from '../firebase'
 
 /** Child details, who to call, cloud help, backup and delete everything (FR-08, FR-26 to FR-28). */
 export function Settings({ ctx }: { ctx: AppContext }) {
@@ -177,8 +177,8 @@ export function Settings({ ctx }: { ctx: AppContext }) {
       <section className="card">
         <h2>AI and privacy</h2>
         <AiStatus ctx={ctx} />
-        {isExtension ? (
-          <p className="muted small">Cloud help is not part of the extension: here, AI runs only on this laptop.</p>
+        {deviceOnly ? (
+          <p className="muted small">Cloud help is not part of this extension: here, AI runs only on this laptop.</p>
         ) : (
           <label className="toggle">
             <input

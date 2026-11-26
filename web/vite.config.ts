@@ -58,6 +58,8 @@ self.addEventListener('fetch', (event) => {
 }
 
 export default defineConfig({
+  // Only the extension build sets an App Check token (vite.extension.config.ts); the website never has one.
+  define: { __EXTENSION_APPCHECK_TOKEN__: JSON.stringify('') },
   plugins: [react(), offlineServiceWorker()],
   server: {
     // The shared rules file (sections, emergency words, prompts) lives one level up.

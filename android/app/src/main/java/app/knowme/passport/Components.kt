@@ -169,13 +169,13 @@ fun CallButtons(passport: Passport, onAlert: Boolean = false) {
 
 /** Shows where every answer came from (FR-13). */
 @Composable
-fun SourceChip(source: String) {
+fun SourceChip(source: String, modifier: Modifier = Modifier) {
     val (icon, label, bg) = when (source) {
         "on_device" -> Triple(Icons.Outlined.Lock, "Answered on this phone", KColors.brandSoft)
         "in_cloud" -> Triple(Icons.Outlined.Cloud, "Answered in the cloud, names removed", Color(0xFFE6EFFF))
         else -> Triple(Icons.AutoMirrored.Outlined.MenuBook, "Straight from the passport", KColors.surface2)
     }
-    Surface(shape = RoundedCornerShape(50), color = bg) {
+    Surface(shape = RoundedCornerShape(18.dp), color = bg, modifier = modifier) {
         Row(Modifier.padding(horizontal = 12.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, modifier = Modifier.size(14.dp), tint = KColors.text)
             Spacer(Modifier.width(6.dp))

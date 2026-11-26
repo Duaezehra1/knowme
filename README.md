@@ -39,13 +39,14 @@ About 1 in 127 people are autistic ([WHO, 2025](https://www.who.int/news-room/fa
 | Emergency detection | Plain code, no AI | — |
 
 - **Privacy first:** routing is explicit. KnowMe uses `ONLY_ON_DEVICE` when Gemini Nano is available and `ONLY_IN_CLOUD` only when the parent has allowed cloud help, with redaction. If neither is possible, offline search still works.
+- **Smart switch on slow laptops:** on laptops without a graphics card Gemini Nano can take a minute. If the on-device answer fails, or is still running after 8 seconds, and cloud help is on, the web app and the extension ask the cloud too (names removed) and show the first useful answer, saying why.
 - **No invented facts:** every AI-organised entry must quote the parent's own words (checked in code), and every answer is shown with the entries it used.
 - **Every answer is labelled** with its source: on this device, in the cloud, or straight from the passport (`inferenceSource`).
 
 ## Firebase
 
 - **Firebase AI Logic** with hybrid inference: web SDK (`getGenerativeModel` with `InferenceMode`) and Android SDK (`firebase-ai` + `firebase-ai-ondevice`, `OnDeviceConfig`)
-- **App Check** enforced on AI Logic: reCAPTCHA Enterprise on the website, Play Integrity registered for Android, and debug providers for development builds (web debug token, Android `DebugAppCheckProviderFactory`)
+- **App Check** enforced on AI Logic: reCAPTCHA Enterprise on the website, Play Integrity registered for Android, and debug providers for development builds (web debug token, Android `DebugAppCheckProviderFactory`). The judging builds of the APK and the extension each carry their own registered debug token, which is revoked after judging; the tokens are never in this repository.
 - **Fast cloud answers**: `gemini-3.5-flash-lite` with minimal thinking. The JSON shape is given in the prompt rather than as a response schema, which cut cloud answers from 10 to 26 seconds down to about 2. A 30-second limit means a carer is never left waiting: the parent's notes are always on screen first.
 - **Hosting** for the web app, with a service worker so it works offline
 - Shared rules file `shared/knowme.json` (sections, situations, emergency phrases, synonyms, AI prompts) used by every platform
@@ -61,14 +62,14 @@ Every platform has a **"Just looking? Try a demo child"** button on its first sc
 3. Type `he keeps hitting his ear`, then `he ran off`. Emergency words skip AI and open the emergency screen.
 4. Tap **Hand to a carer** for the babysitter view and flashcards, and **QR card** to scan the card with another phone's camera.
 
-In desktop Chrome with Gemini Nano, answers say **"Answered on this device"**. Anywhere else they say **"Answered in the cloud, names removed"**.
+In desktop Chrome with Gemini Nano, answers say **"Answered on this device"**. Anywhere else they say **"Answered in the cloud, names removed"**. If Nano is slow on a laptop, the cloud steps in after 8 seconds.
 
 ### Android app
 
 1. On an Android phone, download **[knowme-android.apk](https://github.com/Duaezehra1/knowme/releases/latest/download/knowme-android.apk)** from the latest release and install it (allow installs from your browser when asked).
 2. Tap **Just looking? Try a demo child**, then try **Ask** as above.
 
-On phones with Gemini Nano (for example Pixel 9 or 10, Galaxy S25) answers run **on the phone**. The cloud is protected by **Firebase App Check**, which only trusts registered builds: on other phones this test APK shows the parent's notes with *"The AI couldn't answer just now"* instead of a cloud answer. Everything else (passport, emergency, QR card, flashcards, carer view) works on every phone, and cloud answers can be seen on the website and in the demo video.
+On phones with Gemini Nano (for example Pixel 9 or 10, Galaxy S25) answers run **on the phone**. On every other phone they come **from the cloud, names removed**. The cloud is protected by **Firebase App Check**; this judging APK carries a registered App Check debug token so the cloud trusts it on any phone (the token is revoked after judging).
 
 ### Chrome extension
 
@@ -76,7 +77,7 @@ On phones with Gemini Nano (for example Pixel 9 or 10, Galaxy S25) answers run *
 2. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick the unzipped folder.
 3. Click the KnowMe icon to open the side panel. Select text on any page and right-click **Add to KnowMe passport**.
 
-The extension is **on-device only by design**. It is where parents add therapist reports and letters from web pages, so those never leave the laptop. (It also can't use the cloud: App Check's reCAPTCHA cannot run inside extension pages.) On a laptop without Gemini Nano it shows the family's own notes straight away, with a link to the website for cloud answers.
+The extension is **hybrid** like the other two: Gemini Nano on laptops that have it, otherwise cloud help with names removed (only if the parent turned it on). App Check's reCAPTCHA cannot run inside extension pages, so this judging build carries its own registered App Check debug token instead (revoked after judging). An extension built from source without a token stays **on-device only**: on a laptop without Gemini Nano it shows the family's own notes straight away, with a link to the website for cloud answers.
 
 **On-device AI in Chrome** needs desktop Chrome 139+, 22 GB free disk space, and a GPU with more than 4 GB VRAM or 16 GB RAM with 4+ CPU cores. Check `chrome://on-device-internals`. Without it, KnowMe still works.
 
@@ -99,6 +100,7 @@ Load the extension at `chrome://extensions` → Developer mode → Load unpacked
 1. Register an Android app (`app.knowme.passport`) in your Firebase project and put its `google-services.json` in `android/app/`.
 2. Open `android/` in Android Studio, or run `./gradlew assembleDebug`.
 3. For cloud help on a debug build, open the app's **Settings → Developer: App Check debug token → Create token → Copy**, and add it in Firebase console → App Check → KnowMe Android → Manage debug tokens.
+4. Optional, for a build to share with testers: put a registered debug token in `android/local.properties` as `knowme.judgeAppCheckToken=<token>`. Debug builds then use it on every phone (and hide the developer card). Revoke it in the console when testing ends. For the extension, the same goes in `web/.env.local` as `EXTENSION_APPCHECK_TOKEN=<token>` before `npm run build:extension`.
 
 ## Project structure
 
