@@ -9,7 +9,16 @@ import com.google.firebase.ai.type.PublicPreviewAPI
 import com.google.firebase.ai.type.ThinkingLevel
 import com.google.firebase.ai.type.generationConfig
 import com.google.firebase.ai.type.thinkingConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -93,11 +102,32 @@ object KnowMeAi {
         return result
     }
 
+    /** How long Gemini Nano gets before the cloud takes over (only when cloud help is allowed). Same as the web app. */
+    private const val CLOUD_BACKUP_AFTER_MS = 8_000L
+
+    /** Cloud parts of a long note are read side by side; each takes about 4 seconds. */
+    private const val CLOUD_PARALLEL = 4
+
+    /** Gemini Nano calls that were too slow are left to finish here instead of holding up the screen. */
+    private val deviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /**
+     * Smart hybrid: runs [block] on Gemini Nano. Without cloud help it simply waits. With cloud help
+     * it waits at most [budgetMs]; null means "still running", so the caller asks the cloud instead.
+     */
+    private suspend fun <T> deviceFirst(cloudAllowed: Boolean, budgetMs: Long = CLOUD_BACKUP_AFTER_MS, block: suspend () -> T): Result<T>? {
+        if (deviceWorks == false) return Result.failure(IllegalStateException("No on-device AI"))
+        if (!cloudAllowed) return onDevice(block)
+        if (budgetMs <= 0) return null
+        val job = deviceScope.async { onDevice(block) }
+        return withTimeoutOrNull(budgetMs) { job.await() }
+    }
+
     /** Answers using ONLY the matched entries. The caller always shows the entries too. */
     suspend fun answer(rules: Rules, passport: Passport, question: String, matches: List<Entry>, cloudAllowed: Boolean): Outcome {
         if (matches.isEmpty()) return Outcome.NothingFound
-        val device = onDevice { ask(rules, passport, question, matches, cloud = false) }
-        if (device.isSuccess) return device.getOrNull()?.let { Outcome.Answered(it) } ?: Outcome.NothingFound
+        val device = deviceFirst(cloudAllowed) { ask(rules, passport, question, matches, cloud = false) }
+        if (device != null && device.isSuccess) return device.getOrNull()?.let { Outcome.Answered(it) } ?: Outcome.NothingFound
         if (!cloudAllowed) return Outcome.NoAi
         val cloud = runCatching { ask(rules, passport, question, matches, cloud = true) }
         if (cloud.isFailure) return Outcome.Failed
@@ -139,6 +169,9 @@ object KnowMeAi {
     /**
      * Turns shared or pasted text into proposed entries (FR-05). A proposal whose quote is
      * not in the owner's words is dropped. Every proposal still needs the owner's approval.
+     * Smart hybrid, as on the web: Gemini Nano reads first. If it fails, or is still reading
+     * 8 seconds after the start, and cloud help is allowed, the parts it has not finished go to
+     * the cloud (names removed) and are read side by side.
      */
     suspend fun organize(rules: Rules, passport: Passport, notes: String, cloudAllowed: Boolean): Pair<List<Entry>, String>? {
         val chunks = notes.split(Regex("\\n\\s*\\n")).map { it.trim() }.filter { it.isNotBlank() }
@@ -146,22 +179,37 @@ object KnowMeAi {
         val seen = passport.entries.map { Text.normalize(it.signal) }.toMutableSet()
         val out = mutableListOf<Entry>()
         var source: String? = null
-        for (chunk in chunks) {
-            val attempt = onDevice { organizeChunk(rules, passport, chunk, cloud = false) }.getOrNull()
-                ?: if (cloudAllowed) runCatching { organizeChunk(rules, passport, chunk, cloud = true) }.getOrNull() else null
-            if (attempt == null) {
-                if (source == null) return null
-                continue
-            }
-            source = attempt.second
-            for (e in attempt.first) {
+        fun keep(part: Pair<List<Entry>, String>) {
+            source = part.second
+            for (e in part.first) {
                 val key = Text.normalize(e.signal)
                 if (key in seen) continue
                 seen += key
                 out += e
             }
         }
-        return out to (source ?: "on_device")
+
+        // One budget for the whole job, so several parts that are each a little slow still hand over.
+        val deadline = System.currentTimeMillis() + CLOUD_BACKUP_AFTER_MS
+        var next = 0
+        while (next < chunks.size) {
+            val chunk = chunks[next]
+            val attempt = deviceFirst(cloudAllowed, deadline - System.currentTimeMillis()) { organizeChunk(rules, passport, chunk, cloud = false) }
+            if (attempt == null || (attempt.isFailure && cloudAllowed)) break // slow or failed: the cloud reads the rest
+            attempt.getOrNull()?.let(::keep) // without cloud help a failed part is skipped
+            next++
+        }
+
+        if (next < chunks.size && cloudAllowed) {
+            val gate = Semaphore(CLOUD_PARALLEL)
+            val parts = coroutineScope {
+                chunks.drop(next).map { chunk ->
+                    async { gate.withPermit { runCatching { organizeChunk(rules, passport, chunk, cloud = true) }.getOrNull() } }
+                }.awaitAll()
+            }
+            parts.filterNotNull().forEach(::keep)
+        }
+        return source?.let { out to it }
     }
 
     private suspend fun organizeChunk(rules: Rules, passport: Passport, chunk: String, cloud: Boolean): Pair<List<Entry>, String> {

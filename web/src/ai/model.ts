@@ -36,6 +36,12 @@ export function cloudAllowed(passport: Passport): boolean {
   return passport.settings.cloudHelp && navigator.onLine && cloudAvailable
 }
 
+/**
+ * How long Gemini Nano gets before the cloud is asked too (only when the parent allowed cloud
+ * help). Laptops without a graphics card can take a minute per job.
+ */
+export const CLOUD_BACKUP_AFTER_MS = 8_000
+
 /** The route for an AI job right now, or null when only offline search is possible. */
 export function chooseRoute(passport: Passport, status: DeviceStatus): Route | null {
   if (status === 'available') return 'device'

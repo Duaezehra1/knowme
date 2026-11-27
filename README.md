@@ -39,7 +39,7 @@ About 1 in 127 people are autistic ([WHO, 2025](https://www.who.int/news-room/fa
 | Emergency detection | Plain code, no AI | — |
 
 - **Privacy first:** routing is explicit. KnowMe uses `ONLY_ON_DEVICE` when Gemini Nano is available and `ONLY_IN_CLOUD` only when the parent has allowed cloud help, with redaction. If neither is possible, offline search still works.
-- **Smart switch on slow laptops:** on laptops without a graphics card Gemini Nano can take a minute. If the on-device answer fails, or is still running after 8 seconds, and cloud help is on, the web app and the extension ask the cloud too (names removed) and show the first useful answer, saying why.
+- **Smart switch on slow devices:** on laptops without a graphics card Gemini Nano can take a minute. If on-device AI fails, or is still working after 8 seconds, and cloud help is on, all three apps bring in the cloud (names removed) and say why. Answers: the first useful one wins. Find the facts: the parts Nano hasn't finished are read in the cloud side by side, so a page of notes takes seconds, not minutes.
 - **No invented facts:** every AI-organised entry must quote the parent's own words (checked in code), and every answer is shown with the entries it used.
 - **Every answer is labelled** with its source: on this device, in the cloud, or straight from the passport (`inferenceSource`).
 

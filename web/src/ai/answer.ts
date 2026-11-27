@@ -1,7 +1,7 @@
 import { Schema } from 'firebase/ai'
 import { fillPrompt, PROMPTS, sectionInfo } from '../data/rules'
 import type { AnswerSource, Entry, Passport } from '../data/types'
-import { cloudAllowed, generateJson, type Route } from './model'
+import { CLOUD_BACKUP_AFTER_MS, cloudAllowed, generateJson, type Route } from './model'
 import { makeRedactor } from './redact'
 import type { ScoredEntry } from './search'
 
@@ -68,9 +68,6 @@ export async function answerQuestion(
   if (found === 'none' || used.length === 0 || !text) return { found: 'none', text: '', used: [], source }
   return { found, text, used, source }
 }
-
-/** How long Gemini Nano gets before the cloud is asked too. Laptops without a graphics card can take a minute. */
-export const CLOUD_BACKUP_AFTER_MS = 8_000
 
 /**
  * Smart hybrid: answers on the device first. If Gemini Nano fails, or is still working after

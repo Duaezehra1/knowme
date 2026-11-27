@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { chooseRoute } from '../ai/model'
-import { organizeNotes, type OrganizeProgress } from '../ai/organize'
+import { organizeNotes, type OrganizeProgress, type OrganizeResult } from '../ai/organize'
 import { Icon } from '../components/Icon'
 import { AiStatus, Page } from '../components/ui'
 import type { AppContext } from '../context'
@@ -10,6 +10,15 @@ import { makeEntry } from '../data/store'
 import type { Proposal, SectionId } from '../data/types'
 import { deviceOnly } from '../firebase'
 import { useElapsed } from '../hooks'
+
+/** "Found 4 things to check. 6 were already in Sam's passport." */
+function summarise({ kept, dropped, duplicates }: OrganizeResult, name: string): string {
+  const parts = [kept === 0 ? 'No new facts found.' : `Found ${kept} thing${kept === 1 ? '' : 's'} to check.`]
+  if (duplicates) parts.push(`${duplicates} ${duplicates === 1 ? 'was' : 'were'} already in ${name}'s passport.`)
+  if (dropped) parts.push(`${dropped} unclear suggestion${dropped === 1 ? ' was' : 's were'} left out because ${dropped === 1 ? "it wasn't" : "they weren't"} in your own words.`)
+  if (kept === 0 && !duplicates) parts.push('Try writing full sentences, or use the guided questions.')
+  return parts.join(' ')
+}
 
 /**
  * Paste a long description (a therapist's report, notes you already wrote): AI proposes
@@ -22,6 +31,7 @@ export function Build({ ctx, initialNotes, source }: { ctx: AppContext; initialN
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [progress, setProgress] = useState<OrganizeProgress | null>(null)
   const [summary, setSummary] = useState('')
+  const [backup, setBackup] = useState<OrganizeProgress['backup']>()
   const [error, setError] = useState('')
   const runId = useRef(0)
   const busy = progress !== null
@@ -33,22 +43,23 @@ export function Build({ ctx, initialNotes, source }: { ctx: AppContext; initialN
     const id = ++runId.current
     setError('')
     setSummary('')
-    setProgress({ chunk: 0, chunks: 1 })
+    setBackup(undefined)
+    setProgress({ done: 0, chunks: 1, route })
     try {
       const result = await organizeNotes(
         passport,
         notes,
         route,
         (p) => id === runId.current && setProposals((prev) => [...prev, p]),
-        (p) => id === runId.current && setProgress(p),
+        (p) => {
+          if (id !== runId.current) return
+          setProgress(p)
+          setBackup(p.backup)
+        },
         () => id !== runId.current,
       )
       if (id !== runId.current) return
-      setSummary(
-        result.kept === 0
-          ? "No clear facts found. Try writing full sentences, or use the guided questions."
-          : `Found ${result.kept} thing${result.kept === 1 ? '' : 's'} to check.${result.dropped ? ` ${result.dropped} unclear suggestion${result.dropped === 1 ? ' was' : 's were'} left out because ${result.dropped === 1 ? "it wasn't" : "they weren't"} in your own words.` : ''}`,
-      )
+      setSummary(summarise(result, name))
     } catch (e) {
       if (id === runId.current) setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -114,8 +125,8 @@ export function Build({ ctx, initialNotes, source }: { ctx: AppContext; initialN
             <div className="row" role="status">
               <span className="spinner" aria-hidden="true" />
               <strong style={{ flex: 1 }}>
-                {route === 'device' ? 'Reading on this device' : 'Reading in the cloud, names removed'}
-                {progress && progress.chunks > 1 ? ` · part ${progress.chunk} of ${progress.chunks}` : ''} · {elapsed}s
+                {progress?.route === 'cloud' ? 'Reading in the cloud, names removed' : 'Reading on this device'}
+                {progress && progress.chunks > 1 ? ` · ${progress.done} of ${progress.chunks} parts done` : ''} · {elapsed}s
               </strong>
               <button type="button" className="secondary" onClick={stop}>
                 Stop
@@ -132,7 +143,12 @@ export function Build({ ctx, initialNotes, source }: { ctx: AppContext; initialN
             {deviceOnly ? ', or you can add notes yourself in each section.' : ', and you can turn on cloud help in Settings.'}
           </p>
         )}
-        {busy && route === 'device' && elapsed > 10 && (
+        {backup && (
+          <p className="muted small">
+            {backup === 'slow' ? 'On-device AI is slow here, so the cloud is helping (names removed).' : "On-device AI didn't work this time, so the cloud is helping (names removed)."}
+          </p>
+        )}
+        {busy && progress?.route === 'device' && elapsed > 10 && (
           <p className="muted small">On laptops without a graphics card each part takes about a minute. Facts appear below as soon as they're ready, so you can start checking.</p>
         )}
         {summary && <p className="muted">{summary}</p>}
